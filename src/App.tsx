@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import ChatBot from "./chatbot/ChatBot";
 import CartBar from "./components/CartBar";
 import CartDrawer from "./components/CartDrawer";
 import FloatingActions from "./components/FloatingActions";
@@ -30,6 +31,7 @@ export default function App() {
       <FloatingActions />
       <CartBar />
       <CartDrawer />
+      <ChatBot />
     </>
   );
 }
