@@ -51,16 +51,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <p className="footer__copy">
-          © 2002 BFC. All Rights Reserved | Powered by BFC IT Team
-        </p>
-        <p className="footer__credit">
-          System Design &amp; Developed By :{" "}
-          <a href="https://regantoitsolution.com/" target="_blank" rel="noreferrer">
-            Reganto IT Solution
-          </a>
-        </p>
-        <Socials variant="footer" />
+        <div className="footer__bottom">
+          <p className="footer__copy">© 2002 BFC. All Rights Reserved</p>
+          <Socials variant="footer" />
+          <p className="footer__credit">
+            System Design &amp; Developed By :{" "}
+            <a href="https://regantoitsolution.com/" target="_blank" rel="noreferrer">
+              Reganto IT Solution
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );

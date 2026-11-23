@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FaPhoneAlt, FaShoppingBag, FaTimes } from "react-icons/fa";
 import { useCart } from "../cart/CartContext";
 import { SERVICES, SITE } from "../data/content";
-import { DELIVERY_CHARGE, fallbackFor } from "../data/menu";
+import { DELIVERY_CHARGE, PLACEHOLDER, dishImage } from "../data/menu";
 import type { Dish } from "../data/menu";
 import QtyStepper from "./QtyStepper";
 
@@ -19,18 +19,15 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
   const [step, setStep] = useState(0);
   const [qty, setQty] = useState(1);
 
-  // bigger photo first, then the original, then the local picture
+  // bigger photo first, then the original; if neither loads (or there is none) show the logo
+  const photo = dishImage(dish);
   const sources = Array.from(
     new Set(
-      [dish.image?.replace(/tr-(180|280)xauto/, "tr-560xauto"), dish.image].filter((s): s is string =>
-        Boolean(s)
-      )
+      [photo?.replace(/tr-(180|280)xauto/, "tr-560xauto"), photo].filter((s): s is string => Boolean(s))
     )
   );
-  const fallback = fallbackFor(categoryId);
-  const remote = step < sources.length;
-  const src = remote ? sources[step] : fallback.src;
-  const round = !remote && fallback.round;
+  const hasPhoto = step < sources.length;
+  const src = hasPhoto ? sources[step] : PLACEHOLDER;
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -53,7 +50,7 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
         category: categoryTitle,
         price: dish.price,
         from: dish.from,
-        image: dish.image ?? fallback.src,
+        image: photo ?? PLACEHOLDER,
       },
       qty
     );
@@ -67,15 +64,16 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
           <FaTimes />
         </button>
 
-        <div className={`modal__media ${remote ? "" : "is-fallback"}`}>
+        <div className={`modal__media ${hasPhoto ? "" : "is-fallback"}`}>
           <span className="modal__chip">{categoryTitle}</span>
           <img
             src={src}
             alt={dish.name}
-            className={round ? "is-round" : ""}
+            className={hasPhoto ? "" : "is-logo"}
             referrerPolicy="no-referrer"
-            onError={() => remote && setStep((s) => s + 1)}
+            onError={() => hasPhoto && setStep((s) => s + 1)}
           />
+          {!hasPhoto && <span className="modal__ph">Photo coming soon</span>}
         </div>
 
         <div className="modal__body">

@@ -1,15 +1,11 @@
 /**
  * Full BFC menu (from the BFC online ordering page, Uttara Jashimuddin outlet).
  * Prices are in BDT. `from: true` means "From ৳price" (sizes / variants).
- * `image` is optional - items without a photo show a small dot instead.
+ * `image` is optional - items without a photo show the BFC logo ("Photo coming soon").
  */
 
-import chickenLocal from "../assets/images/1.png";
-import burgerLocal from "../assets/images/2.png";
+import logo from "../assets/images/logo.png";
 import riceLocal from "../assets/images/3.png";
-import sidesLocal from "../assets/images/4.png";
-import comboLocal from "../assets/images/ab2.png";
-import crispyLocal from "../assets/images/g-crispy.jpg";
 import sauceLocal from "../assets/images/g-sauce.jpg";
 export interface Dish {
   name: string;
@@ -72,7 +68,7 @@ export const MENU: MenuCategory[] = [
     title: "Chicken Wings",
     items: [
       { name: "Hot Wing", price: 130, from: true, image: IMG.hotWing },
-      { name: "Naga Wings", price: 145, from: true, image: IMG.naga },
+      { name: "Naga Wings", price: 145, from: true },
       {
         name: "BBQ Hot Wings",
         price: 140,
@@ -86,13 +82,13 @@ export const MENU: MenuCategory[] = [
     id: "chicken-delight",
     title: "Chicken Delight",
     items: [
-      { name: "Chicken Pops", price: 195, image: IMG.nuggets },
-      { name: "Naga Pops", price: 205, image: IMG.nuggets },
-      { name: "Chicken Lollipop", price: 140, from: true, image: IMG.hotWing },
+      { name: "Chicken Pops", price: 195 },
+      { name: "Naga Pops", price: 205 },
+      { name: "Chicken Lollipop", price: 140, from: true },
       { name: "Crispy Strips", price: 160, from: true, image: IMG.strips },
-      { name: "Chicken Mini Strips", price: 165, from: true, image: IMG.strips },
+      { name: "Chicken Mini Strips", price: 165, from: true },
       { name: "Nuggets", price: 145, from: true, image: IMG.nuggets },
-      { name: "BBQ Boneless Chicken", price: 160, from: true, image: IMG.nuggets },
+      { name: "BBQ Boneless Chicken", price: 160, from: true },
     ],
   },
   {
@@ -116,14 +112,13 @@ export const MENU: MenuCategory[] = [
       },
       { name: "Supreme Burger", price: 295, image: IMG.supreme },
       { name: "Supreme Cheese Burger", price: 325, image: IMG.supremeCheese },
-      { name: "Garlic Burger Regular", price: 220, image: IMG.bestBurger },
-      { name: "Garlic Burger Large", price: 290, image: IMG.bestBurger },
-      { name: "Garlic Burger Regular With Cheese", price: 250, image: IMG.cheeseBurger },
+      { name: "Garlic Burger Regular", price: 220 },
+      { name: "Garlic Burger Large", price: 290 },
+      { name: "Garlic Burger Regular With Cheese", price: 250 },
       {
         name: "Garlic Burger Large With Cheese",
         price: 320,
         desc: "Crispy chicken fillet with garlic sauce, pickle, lettuce, and cheese.",
-        image: IMG.cheeseBurger,
       },
       { name: "Juicy Burger", price: 195, from: true, image: IMG.juicy },
       { name: "Juicy Burger With Cheese", price: 225, image: IMG.juicyCheese },
@@ -134,8 +129,8 @@ export const MENU: MenuCategory[] = [
     title: "Rice Items",
     items: [
       { name: "Rice", price: 95, image: riceLocal },
-      { name: "Rice Bowl 2", price: 215, desc: "1 Rice Bowl, 1 Fried Chicken/4 pieces Wings", image: riceLocal },
-      { name: "Rice Bowl 3", price: 235, desc: "1 Rice Bowl, 3 Strips/ 10 BBQ Boneless", image: riceLocal },
+      { name: "Rice Bowl 2", price: 215, desc: "1 Rice Bowl, 1 Fried Chicken/4 pieces Wings" },
+      { name: "Rice Bowl 3", price: 235, desc: "1 Rice Bowl, 3 Strips/ 10 BBQ Boneless" },
     ],
   },
   {
@@ -146,31 +141,26 @@ export const MENU: MenuCategory[] = [
         name: "Combo 13",
         price: 315,
         desc: "1 Rice Bowl, 1 Fried Chicken, 1 Coleslaw. 1 Drinks (Dine in Fountain Drink, Takeaway - Bottle Mini)",
-        image: riceLocal,
       },
       {
         name: "Combo 14",
         price: 315,
         desc: "1 Rice Bowl, 4 Pieces Hot Wings, 1 Coleslaw. 1 Drinks (Dine in Fountain Drink, Takeaway - Bottle Mini)",
-        image: riceLocal,
       },
       {
         name: "Combo 15",
         price: 345,
         desc: "1 Rice Bowl, 3 fried Strips, 1 Coleslaw. 1 Drinks (Dine in Fountain Drink, Takeaway - Bottle Mini)",
-        image: riceLocal,
       },
       {
         name: "Combo 16",
         price: 345,
         desc: "1 Rice Bowl,10 Pieces BBQ Boneless Chicken, 1 Coleslaw. 1 Drinks (Dine in Fountain Drink, Takeaway - Bottle Mini)",
-        image: riceLocal,
       },
       {
         name: "Combo 17",
         price: 340,
         desc: "1 Rice Bowl, Grilled Chicken, 1 Coleslaw. 1 Drinks (Dine in Fountain Drink, Takeaway - Bottle Mini)",
-        image: riceLocal,
       },
     ],
   },
@@ -182,40 +172,40 @@ export const MENU: MenuCategory[] = [
       { name: "Masala / Garlic Fries", price: 125, from: true, image: IMG.masala },
       { name: "Potato Wedges", price: 95, image: IMG.wedges },
       { name: "Coleslaw", price: 75, image: IMG.coleslaw },
-      { name: "Extra Cheese", price: 30, image: IMG.cheeseBurger },
-      { name: "Extra Bun", price: 20, image: IMG.bestBurger },
+      { name: "Extra Cheese", price: 30 },
+      { name: "Extra Bun", price: 20 },
       { name: "BBQ Dip", price: 30, image: sauceLocal },
-      { name: "Dip", price: 20, from: true, image: sauceLocal },
+      { name: "Dip", price: 20, from: true },
     ],
   },
   {
     id: "chicken-combo",
     title: "Chicken Combo",
     items: [
-      { name: "Combo-1", price: 395, desc: `F.Chicken 2 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.chicken },
-      { name: "Combo-2", price: 350, desc: `F.Chicken 2 pcs + Coleslaw (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.chicken },
-      { name: "Combo-3", price: 520, desc: `F.Chicken 3 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.chicken },
-      { name: "Combo-4", price: 475, desc: `F.Chicken 3 pcs + Coleslaw (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.chicken },
+      { name: "Combo-1", price: 395, desc: `F.Chicken 2 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs` },
+      { name: "Combo-2", price: 350, desc: `F.Chicken 2 pcs + Coleslaw (R) 1 pcs + ${DRINK} 1 pcs` },
+      { name: "Combo-3", price: 520, desc: `F.Chicken 3 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs` },
+      { name: "Combo-4", price: 475, desc: `F.Chicken 3 pcs + Coleslaw (R) 1 pcs + ${DRINK} 1 pcs` },
     ],
   },
   {
     id: "burger-combo",
     title: "Burger Combo",
     items: [
-      { name: "Combo-5", price: 440, desc: `B.Burger with Cheese 1 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.cheeseBurger },
-      { name: "Combo-6", price: 395, desc: `B.Burger with Cheese 1 pcs+ Coleslaw (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.cheeseBurger },
-      { name: "Combo-7", price: 460, desc: `Suprm.Chs Burger 1 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.supremeCheese },
-      { name: "Combo-8", price: 415, desc: `Suprm.Chs Burger 1 pcs + Coleslaw (R) 1 pcs + ${DRINK} 1 pcs`, image: IMG.supremeCheese },
+      { name: "Combo-5", price: 440, desc: `B.Burger with Cheese 1 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs` },
+      { name: "Combo-6", price: 395, desc: `B.Burger with Cheese 1 pcs+ Coleslaw (R) 1 pcs + ${DRINK} 1 pcs` },
+      { name: "Combo-7", price: 460, desc: `Suprm.Chs Burger 1 pcs + F.Fries (R) 1 pcs + ${DRINK} 1 pcs` },
+      { name: "Combo-8", price: 415, desc: `Suprm.Chs Burger 1 pcs + Coleslaw (R) 1 pcs + ${DRINK} 1 pcs` },
     ],
   },
   {
     id: "new-burger-combo",
     title: "New Burger Combo",
     items: [
-      { name: "New Burger Combo-1", price: 440, desc: "Spicy Burger with cheese (L)+ 1 Bottle Drink 200 ml + 1 french fries (R)", image: IMG.spicyCheese },
-      { name: "New Burger Combo-2", price: 395, desc: "Spicy Burger with cheese (L)+ 1 Bottle Drink (200 ml)+ 1 coleslaw", image: IMG.spicyCheese },
-      { name: "New Burger Combo-3", price: 360, desc: "Juicy Burger with Cheese (R)+ 1 Bottle Drink (200 ml)+ 1 French fries (R)", image: IMG.juicyCheese },
-      { name: "New Burger Combo-4", price: 315, desc: "Juicy Burger with cheese (L)+ 1 Bottle Drink (200 ml)+ 1 coleslaw", image: IMG.juicyCheese },
+      { name: "New Burger Combo-1", price: 440, desc: "Spicy Burger with cheese (L)+ 1 Bottle Drink 200 ml + 1 french fries (R)" },
+      { name: "New Burger Combo-2", price: 395, desc: "Spicy Burger with cheese (L)+ 1 Bottle Drink (200 ml)+ 1 coleslaw" },
+      { name: "New Burger Combo-3", price: 360, desc: "Juicy Burger with Cheese (R)+ 1 Bottle Drink (200 ml)+ 1 French fries (R)" },
+      { name: "New Burger Combo-4", price: 315, desc: "Juicy Burger with cheese (L)+ 1 Bottle Drink (200 ml)+ 1 coleslaw" },
     ],
   },
   {
@@ -235,59 +225,69 @@ export const MENU: MenuCategory[] = [
         name: "Mega Feast-1 (for 2 person)",
         price: 970,
         desc: "F.Chicken 4 pcs + Coleslaw (R) 2 pcs + F.Fries (R) 2 pcs Bun 2 pcs + Bottle Drinks (250 ml) 2 pcs",
-        image: crispyLocal,
       },
-      { name: "Mega Feast (for 2 person)", price: 970, image: crispyLocal },
+      { name: "Mega Feast (for 2 person)", price: 970 },
     ],
   },
   {
     id: "new-combo",
     title: "New Combo",
     items: [
-      { name: "New Combo-1", price: 440, desc: "Consists of one Spicy cheese burger, regular french fries & 200 ml bottle drinks.", image: IMG.spicyCheese },
-      { name: "New Combo-2", price: 395, desc: "Consists of spicy cheese burger, regular coleslaw & 200 ml bottle drinks", image: IMG.spicyCheese },
-      { name: "New Combo-3", price: 360, desc: "Consists of juicy cheese burger, regular french fries & 200 ml bottle drinks", image: IMG.juicyCheese },
-      { name: "New Combo-4", price: 315, desc: "Consists of juicy cheese burger, regular coleslaw & 200 ml bottle drinks", image: IMG.juicyCheese },
+      { name: "New Combo-1", price: 440, desc: "Consists of one Spicy cheese burger, regular french fries & 200 ml bottle drinks." },
+      { name: "New Combo-2", price: 395, desc: "Consists of spicy cheese burger, regular coleslaw & 200 ml bottle drinks" },
+      { name: "New Combo-3", price: 360, desc: "Consists of juicy cheese burger, regular french fries & 200 ml bottle drinks" },
+      { name: "New Combo-4", price: 315, desc: "Consists of juicy cheese burger, regular coleslaw & 200 ml bottle drinks" },
     ],
   },
   {
     id: "beverage",
     title: "Beverage",
     items: [
-      { name: "Mango Juice", price: 20, image: IMG.special1 },
+      { name: "Mango Juice", price: 20 },
       { name: "Aquafina", price: 20, image: IMG.water },
     ],
   },
   {
     id: "chicken-wrap",
     title: "Chicken Wrap",
-    items: [{ name: "Regular Wrap", price: 220, from: true, image: IMG.chicken }],
+    items: [{ name: "Regular Wrap", price: 220, from: true }],
   },
   {
     id: "combos",
     title: "Combos",
     items: [
-      { name: "Combo 11", price: 455, from: true, desc: "Garlic Burger Combo, New Items", image: IMG.cheeseBurger },
-      { name: "Combo 12", price: 410, from: true, desc: "Garlic Burger Combo, New Items", image: IMG.cheeseBurger },
+      { name: "Combo 11", price: 455, from: true, desc: "Garlic Burger Combo, New Items" },
+      { name: "Combo 12", price: 410, from: true, desc: "Garlic Burger Combo, New Items" },
     ],
   },
 ];
 
-/** Local picture used when a remote photo cannot be loaded */
-const FALLBACK: Record<string, { src: string; round: boolean }> = {
-  "fried-chicken": { src: chickenLocal, round: true },
-  "chicken-wings": { src: chickenLocal, round: true },
-  "chicken-delight": { src: chickenLocal, round: true },
-  "chicken-burger": { src: burgerLocal, round: true },
-  "rice-items": { src: riceLocal, round: true },
-  "rice-meal": { src: riceLocal, round: true },
-  "side-menu": { src: sidesLocal, round: true },
-  beverage: { src: sidesLocal, round: true },
-  "chicken-wrap": { src: burgerLocal, round: true },
-};
+/** Shown for items that have no photo yet */
+export const PLACEHOLDER = logo;
 
-export function fallbackFor(categoryId: string): { src: string; round: boolean } {
-  return FALLBACK[categoryId] ?? { src: comboLocal, round: false };
+/** "Naga Wings" -> "naga-wings" */
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// Photos dropped into src/assets/menu/<item-slug>.jpg are picked up automatically.
+const LOCAL = import.meta.glob("../assets/menu/*.{jpg,jpeg,png,webp}", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+const LOCAL_BY_SLUG: Record<string, string> = {};
+for (const [path, url] of Object.entries(LOCAL)) {
+  const file = path.split("/").pop() ?? "";
+  LOCAL_BY_SLUG[slugify(file.replace(/\.[^.]+$/, ""))] = url;
+}
+
+/** The photo for an item: a file in src/assets/menu first, then the online photo, else undefined. */
+export function dishImage(dish: Dish): string | undefined {
+  return LOCAL_BY_SLUG[slugify(dish.name)] ?? dish.image;
 }
 
 /** Delivery charge shown on the online ordering page */

@@ -5,22 +5,23 @@ import ChipScroller from "../components/ChipScroller";
 import DishModal from "../components/DishModal";
 import heroImg from "../assets/images/hero.jpg";
 import { SERVICES, SITE } from "../data/content";
-import { DELIVERY_CHARGE, MENU, fallbackFor } from "../data/menu";
+import { DELIVERY_CHARGE, MENU, PLACEHOLDER, dishImage } from "../data/menu";
 import type { Dish as DishType, MenuCategory } from "../data/menu";
 import { delay } from "../utils/style";
 
-function Dish({ dish, catId, onOpen }: { dish: DishType; catId: string; onOpen: () => void }) {
+function Dish({ dish, onOpen }: { dish: DishType; onOpen: () => void }) {
   const [broken, setBroken] = useState(false);
-  const fallback = fallbackFor(catId);
-  const src = dish.image && !broken ? dish.image : fallback.src;
+  const photo = dishImage(dish);
+  const hasPhoto = Boolean(photo) && !broken;
 
   return (
     <li className="dish">
       <button className="dish__link" onClick={onOpen} aria-label={`View ${dish.name}`}>
         <span className="dish__thumb">
           <img
-            src={src}
+            src={hasPhoto ? photo : PLACEHOLDER}
             alt=""
+            className={hasPhoto ? "" : "is-ph"}
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setBroken(true)}
@@ -133,7 +134,7 @@ export default function MenuPage() {
                 </header>
                 <ul className="board__items">
                   {c.items.map((d) => (
-                    <Dish key={d.name} dish={d} catId={c.id} onOpen={() => setSelected({ dish: d, cat: c })} />
+                    <Dish key={d.name} dish={d} onOpen={() => setSelected({ dish: d, cat: c })} />
                   ))}
                 </ul>
               </article>
@@ -148,8 +149,7 @@ export default function MenuPage() {
 
           <p className="menu__note">
             Menu and prices are from the BFC online ordering page (Uttara Jashimuddin outlet) and may
-            vary by outlet. Delivery charge: ৳{DELIVERY_CHARGE}. Photos of similar items are shared where
-            an item has no photo of its own.
+            vary by outlet. Delivery charge: ৳{DELIVERY_CHARGE}. Items without a photo show the BFC logo.
           </p>
 
           <div className="menu-order reveal">
