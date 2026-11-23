@@ -80,7 +80,8 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
           <h2>{dish.name}</h2>
 
           <div className="modal__price">
-            {dish.from && <small>From</small>}৳{dish.price}
+            {dish.from && <small>From</small>}
+            <span>৳{dish.price}</span>
           </div>
 
           {dish.desc && <p className="modal__desc">{dish.desc}</p>}

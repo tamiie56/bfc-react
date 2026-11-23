@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { HOURS } from "../data/content";
 
-function dhakaHour(): number {
+export function dhakaHour(): number {
   try {
     const parts = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Asia/Dhaka",

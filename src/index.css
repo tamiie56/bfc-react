@@ -9,8 +9,8 @@
   --ink-2: #241915;
   --cream: #fff7ea;
   --muted: #6b5f5a;
-  --font-body: "Raleway", sans-serif;
-  --font-head: "Oswald", sans-serif;
+  --font-body: "Raleway", "Hind Siliguri", sans-serif;
+  --font-head: "Oswald", "Hind Siliguri", sans-serif;
   --font-script: "Pacifico", cursive;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -34,6 +34,9 @@ body {
   background: #fff;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Raleway defaults to old-style digits (uneven heights) - force even, lining numerals everywhere */
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
 }
 
 img {
@@ -168,17 +171,17 @@ button {
 
 .btn--red {
   background: var(--red);
-  box-shadow: 0 10px 28px rgba(194, 13, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 
 .btn--red:hover {
-  box-shadow: 0 16px 36px rgba(194, 13, 0, 0.6);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
 }
 
 .btn--yellow {
   background: var(--yellow);
   color: #1b1209;
-  box-shadow: 0 10px 28px rgba(255, 200, 10, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .btn--ghost {
@@ -276,7 +279,7 @@ button {
   background: var(--red);
   color: #fff;
   font-size: 1.5rem;
-  box-shadow: 0 10px 26px rgba(194, 13, 0, 0.5);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
   opacity: 0;
   transform: translateY(20px) scale(0.8);
   pointer-events: none;
@@ -528,7 +531,7 @@ button {
   min-width: 180px;
   padding: 0.5rem;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.97);
+  background: #fff;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
   opacity: 0;
   visibility: hidden;
@@ -841,7 +844,7 @@ button {
   border-radius: 50%;
   background: var(--yellow);
   border: 6px solid var(--red);
-  box-shadow: 0 26px 50px rgba(194, 13, 0, 0.22);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.28);
 }
 
 .about__oval::before {
@@ -1178,7 +1181,7 @@ button {
 
 .search:focus-within {
   border-color: var(--red);
-  box-shadow: 0 14px 36px rgba(194, 13, 0, 0.2);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
 }
 
 .search svg {
@@ -1228,7 +1231,7 @@ button {
   background: var(--red);
   border-color: var(--red);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(194, 13, 0, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .chip.is-active svg {
@@ -1489,7 +1492,7 @@ button {
   border-radius: 50%;
   background: var(--red);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(194, 13, 0, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .stars {
@@ -1738,8 +1741,7 @@ button {
 }
 
 .footer__text a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 .footer__text a:hover {
@@ -1823,7 +1825,7 @@ button {
     padding: 5.5rem 2rem 2rem;
     z-index: 2;
     overflow-y: auto;
-    background: rgba(14, 8, 6, 0.97);
+    background: #0e0806;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-16px);
@@ -2340,7 +2342,7 @@ button {
 
 .dish__line strong small {
   margin-right: 0.35rem;
-  font-family: var(--font-body);
+  font-family: var(--font-head);
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -2462,37 +2464,37 @@ button {
 .modal__card {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(260px, 350px) 1fr;
+  grid-template-columns: minmax(260px, 360px) 1fr;
   grid-template-rows: minmax(0, 1fr);
-  width: min(880px, 100%);
+  width: min(860px, 100%);
   max-height: 92vh;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 20px;
   background: var(--ink);
   color: #fff;
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   animation: stagePop 0.4s var(--ease) both;
 }
 
 .modal__close {
   position: absolute;
-  top: 0.9rem;
-  right: 0.9rem;
+  top: 1rem;
+  right: 1rem;
   z-index: 3;
   display: grid;
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 0;
+  border: 1px solid #3a2a24;
   border-radius: 50%;
-  background: #3a2a24;
+  background: var(--ink-2);
   color: #fff;
-  transition: background 0.25s, transform 0.25s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .modal__close:hover {
   background: var(--red);
-  transform: rotate(90deg);
+  border-color: var(--red);
 }
 
 .modal__media {
@@ -2511,7 +2513,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 1.6rem;
+  padding: 2.6rem 1.6rem 1.6rem;
   animation: stagePop 0.5s var(--ease) both;
 }
 
@@ -2542,7 +2544,7 @@ button {
   padding: 0;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 18px 36px rgba(60, 20, 10, 0.3);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
 }
 
 .modal__chip {
@@ -2550,8 +2552,8 @@ button {
   top: 1rem;
   left: 1rem;
   z-index: 2;
-  padding: 0.35rem 0.95rem;
-  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
   background: var(--ink);
   color: var(--yellow);
   font-size: 0.68rem;
@@ -2563,12 +2565,12 @@ button {
 .modal__body {
   display: flex;
   flex-direction: column;
-  padding: 2.4rem 2.2rem 1.8rem;
+  padding: 2.2rem 2.2rem 1.6rem;
   overflow-y: auto;
 }
 
 .modal__body h2 {
-  padding-right: 2.6rem;
+  padding-right: 2.8rem;
   font-family: var(--font-head);
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   line-height: 1.12;
@@ -2577,6 +2579,9 @@ button {
 }
 
 .modal__price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
   margin-top: 0.5rem;
   font-family: var(--font-head);
   font-size: 2.6rem;
@@ -2585,8 +2590,7 @@ button {
 }
 
 .modal__price small {
-  margin-right: 0.5rem;
-  font-family: var(--font-body);
+  font-family: var(--font-head);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 2px;
@@ -2602,34 +2606,35 @@ button {
 .modal__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 1rem;
+  gap: 0.4rem;
+  margin-top: 1.1rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #33241e;
 }
 
 .modal__tags li {
-  padding: 0.22rem 0.8rem;
-  border-radius: 999px;
-  background: #2b201b;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid #4a342b;
+  border-radius: 6px;
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .modal__buy {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-top: auto;
-  padding: 1.1rem 0 1rem;
-  border-top: 1px solid #3a2b25;
+  padding: 1.2rem 0;
 }
 
 .modal__buy > div {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .modal__buy span {
@@ -2654,8 +2659,10 @@ button {
 
 .modal__add {
   width: 100%;
-  padding: 1.1rem;
+  padding: 1rem;
+  border-radius: 12px;
   font-size: 0.9rem;
+  box-shadow: none;
 }
 
 .modal__foot {
@@ -2664,16 +2671,18 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #33241e;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .modal__foot a {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: rgba(255, 255, 255, 0.8);
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .modal__foot a:hover {
@@ -2780,7 +2789,7 @@ button {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  box-shadow: 0 16px 36px rgba(194, 13, 0, 0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
   animation: rise 0.4s var(--ease) both;
   transition: background 0.25s, color 0.25s;
 }
@@ -3312,5 +3321,493 @@ button {
   .stars li {
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/* ---------- chatbot (Chicky) ---------- */
+.bot {
+  position: fixed;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  z-index: 160;
+  width: 108px;
+  height: 134px;
+}
+
+.bot__mascot {
+  display: block;
+  width: 108px;
+  height: 134px;
+  transform-origin: 50% 100%;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bot__mascot:active {
+  cursor: grabbing;
+}
+
+/* chat open: the mascot hops away; chat closed: it bounces back in */
+.bot__mascot.is-away {
+  transform: translateY(70px) scale(0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s ease-in, opacity 0.25s ease-in;
+}
+
+.bot__mascot .mascot {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.3));
+}
+
+.bot__nudge {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  padding: 0.55rem 0.95rem;
+  border: 0;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+  animation: stagePop 0.4s var(--ease) both;
+}
+
+.bot.is-right .bot__nudge {
+  right: 0;
+}
+
+.bot.is-left .bot__nudge {
+  left: 0;
+}
+
+.bot__panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: min(370px, calc(100vw - 2.4rem));
+  height: var(--ph, 560px);
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: stagePop 0.3s var(--ease) both;
+}
+
+.bot.is-up .bot__panel {
+  bottom: 0;
+}
+
+.bot.is-down .bot__panel {
+  top: 0;
+}
+
+.bot.is-right .bot__panel {
+  right: 0;
+}
+
+.bot.is-left .bot__panel {
+  left: 0;
+}
+
+.bot__head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+  background: var(--red);
+}
+
+.bot__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+
+.bot__avatar .mascot {
+  width: 36px;
+  height: 36px;
+}
+
+.bot__who {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.bot__who strong {
+  display: block;
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.bot__who span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  opacity: 0.9;
+}
+
+.bot__who i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3ddc84;
+}
+
+.bot__close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+}
+
+.bot__close:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.bot__log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.bot__msg {
+  max-width: 88%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.bot__msg p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.bot__msg--bot {
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  background: var(--ink-2);
+  border: 1px solid #3a2a24;
+}
+
+.bot__msg--user {
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  background: var(--red);
+}
+
+.bot__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.bot__link {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--yellow);
+  border-radius: 8px;
+  color: var(--yellow);
+  font-size: 0.74rem;
+  font-weight: 700;
+  transition: background 0.2s, color 0.2s;
+}
+
+.bot__link:hover {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.bot__typing {
+  display: flex;
+  gap: 5px;
+  padding: 0.85rem 1rem;
+}
+
+.bot__typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: botDot 1s infinite ease-in-out;
+}
+
+.bot__typing span:nth-child(2) { animation-delay: 0.15s; }
+.bot__typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes botDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.bot__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0 1rem 0.8rem;
+}
+
+.bot__chips button {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #4a342b;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.74rem;
+  font-weight: 600;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.bot__chips button:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.bot__form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid #33241e;
+}
+
+.bot__form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #4a342b;
+  border-radius: 12px;
+  background: var(--ink-2);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.bot__form input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.bot__form input:focus {
+  outline: 0;
+  border-color: var(--yellow);
+}
+
+.bot__form button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.bot__form button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* mascot animation - organic idle + "hi" wave + flying kiss (9s loop) */
+.mascot {
+  display: block;
+  overflow: visible;
+}
+
+.mascot__eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascotBlink 7.3s infinite;
+}
+
+.mascot__look {
+  animation: mascotLook 11s ease-in-out infinite;
+}
+
+.mascot__beak-low {
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+
+.mascot.is-talking .mascot__beak-low {
+  animation: mascotTalk 0.26s infinite alternate;
+}
+
+.mascot__breathe {
+  transform-origin: 80px 178px;
+  animation: mascotBreathe 3.4s ease-in-out infinite;
+}
+
+.mascot__neck {
+  transform-origin: 80px 84px;
+  animation: mascotSway 5.6s ease-in-out infinite;
+}
+
+.mascot__head {
+  transform-origin: 80px 84px;
+  animation: mascotHead 9s ease-in-out infinite;
+}
+
+.mascot__wing {
+  transform-origin: 114px 100px;
+  animation: mascotWing 9s ease-in-out infinite;
+}
+
+.mascot__tail {
+  transform-origin: 108px 152px;
+}
+
+.mascot__tail--1 { animation: mascotTail 4.1s ease-in-out infinite; }
+.mascot__tail--2 { animation: mascotTail 5s ease-in-out -1.3s infinite; }
+.mascot__tail--3 { animation: mascotTail 3.7s ease-in-out -2.1s infinite; }
+.mascot__tail--4 { animation: mascotTail 4.6s ease-in-out -0.6s infinite; }
+
+.mascot__heart {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascotHeart 9s ease-in-out infinite;
+}
+
+.mascot__eyes {
+  animation: mascotEyesOpen 9s infinite;
+}
+
+.mascot__happy {
+  opacity: 0;
+  animation: mascotEyesHappy 9s infinite;
+}
+
+@keyframes mascotBreathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.012, 1.02); }
+}
+
+@keyframes mascotSway {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50% { transform: rotate(1.8deg); }
+}
+
+@keyframes mascotHead {
+  0%, 4% { transform: rotate(0deg); }
+  10%, 24% { transform: rotate(-4deg); }
+  32% { transform: rotate(0deg); }
+  38%, 52% { transform: rotate(5deg) translateY(1px); }
+  62%, 100% { transform: rotate(0deg); }
+}
+
+@keyframes mascotWing {
+  0%, 4% { transform: rotate(0deg); }
+  8% { transform: rotate(-142deg); }
+  11% { transform: rotate(-166deg); }
+  14% { transform: rotate(-134deg); }
+  17% { transform: rotate(-164deg); }
+  20% { transform: rotate(-138deg); }
+  23% { transform: rotate(-158deg); }
+  27% { transform: rotate(-142deg); }
+  34% { transform: rotate(4deg); }
+  39%, 51% { transform: rotate(138deg); }
+  60%, 100% { transform: rotate(0deg); }
+}
+
+@keyframes mascotTail {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes mascotHeart {
+  0%, 47% { opacity: 0; transform: translate(0, 0) scale(0.2); }
+  50% { opacity: 1; transform: translate(0, -2px) scale(0.8); }
+  58% { opacity: 1; transform: translate(10px, -22px) scale(1); }
+  66% { opacity: 1; transform: translate(26px, -42px) scale(1.12); }
+  76% { opacity: 1; transform: translate(30px, -68px) scale(1.28); }
+  88%, 100% { opacity: 0; transform: translate(46px, -96px) scale(1.4); }
+}
+
+@keyframes mascotEyesOpen {
+  0%, 38%, 52%, 100% { opacity: 1; }
+  39%, 51% { opacity: 0; }
+}
+
+@keyframes mascotEyesHappy {
+  0%, 38%, 52%, 100% { opacity: 0; }
+  39%, 51% { opacity: 1; }
+}
+
+@keyframes mascotBlink {
+  0%, 89%, 93%, 100% { transform: scaleY(1); }
+  91% { transform: scaleY(0.08); }
+  95% { transform: scaleY(0.08); }
+  97% { transform: scaleY(1); }
+}
+
+@keyframes mascotLook {
+  0%, 20%, 100% { transform: translateX(0); }
+  30%, 45% { transform: translateX(-1.6px); }
+  60%, 75% { transform: translateX(1.6px); }
+}
+
+@keyframes mascotTalk {
+  from { transform: translateY(0); }
+  to { transform: translateY(3px); }
+}
+
+@media (max-width: 767px) {
+  .bot {
+    bottom: 5.4rem;
+  }
+  .bot .bot__panel {
+    position: fixed;
+    top: auto;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    left: 0.6rem;
+    width: auto;
+    height: min(78vh, 600px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot__eye,
+  .mascot__look,
+  .mascot__breathe,
+  .mascot__neck,
+  .mascot__head,
+  .mascot__tail,
+  .mascot__wing,
+  .mascot__heart,
+  .mascot__eyes,
+  .mascot__happy,
+  .mascot.is-talking .mascot__beak-low,
+  .bot__typing span {
+    animation: none;
   }
 }
