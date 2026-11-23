@@ -1,6 +1,9 @@
 import { FaAlignCenter } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { SITE } from "../data/content";
 import Socials from "./Socials";
+
+const to = (id: string) => ({ pathname: "/", hash: `#${id}` });
 
 export default function Footer() {
   return (
@@ -10,17 +13,18 @@ export default function Footer() {
         <div className="footer__grid">
           <div>
             <h2 className="footer__home">
-              <a href="#home">
+              <Link to={to("home")}>
                 <FaAlignCenter aria-hidden /> Home
-              </a>
+              </Link>
             </h2>
             <ul className="footer__links">
-              <li><a href="#about">About</a></li>
-              <li><a href="#services">Services</a></li>
-              <li><a href="#outlets">Outlets</a></li>
-              <li><a href="#gallery">Gallery</a></li>
-              <li><a href="#testimonials">Reviews</a></li>
-              <li><a href="#contact">Contact</a></li>
+              <li><Link to={to("about")}>About</Link></li>
+              <li><Link to="/menu">Menu</Link></li>
+              <li><Link to={to("services")}>Services</Link></li>
+              <li><Link to={to("outlets")}>Outlets</Link></li>
+              <li><Link to={to("gallery")}>Gallery</Link></li>
+              <li><Link to={to("testimonials")}>Reviews</Link></li>
+              <li><Link to={to("contact")}>Contact</Link></li>
             </ul>
           </div>
 
@@ -49,6 +53,12 @@ export default function Footer() {
 
         <p className="footer__copy">
           © 2002 BFC. All Rights Reserved | Powered by BFC IT Team
+        </p>
+        <p className="footer__credit">
+          System Design &amp; Developed By :{" "}
+          <a href="https://regantoitsolution.com/" target="_blank" rel="noreferrer">
+            Reganto IT Solution
+          </a>
         </p>
         <Socials variant="footer" />
       </div>

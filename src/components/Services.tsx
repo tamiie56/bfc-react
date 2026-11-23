@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { FOODS, SITE } from "../data/content";
 import type { FoodItem } from "../data/content";
 import { cssVars } from "../utils/style";
@@ -89,6 +90,12 @@ export default function Services() {
             {prev !== null && <Slide key={`out-${prev}`} food={FOODS[prev]} mode="out" />}
             <Slide key={`in-${active}`} food={food} mode="in" />
           </div>
+        </div>
+
+        <div className="services__more reveal">
+          <Link to="/menu" className="btn btn--ghost">
+            View Full Menu <FaArrowRight aria-hidden />
+          </Link>
         </div>
       </div>
     </section>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 /** Returns the id of the section currently in the middle of the viewport. */
-export function useActiveSection(ids: string[]): string {
+export function useActiveSection(ids: string[], routeKey: string): string {
   const [active, setActive] = useState(ids[0]);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function useActiveSection(ids: string[]): string {
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids.join("|")]);
+  }, [ids.join("|"), routeKey]);
 
   return active;
 }

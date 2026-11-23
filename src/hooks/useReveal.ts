@@ -1,29 +1,49 @@
 import { useEffect } from "react";
 
-/** Adds `.is-visible` to every `.reveal` element when it scrolls into view. */
-export function useReveal() {
+/**
+ * Adds `.is-visible` to every `.reveal` element when it scrolls into view.
+ * Re-runs on route change and also picks up elements added later (menu filters etc.).
+ */
+export function useReveal(routeKey: string) {
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const io =
+      reduce || !("IntersectionObserver" in window)
+        ? null
+        : new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-visible");
+                  io?.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.08, rootMargin: "0px 0px -6% 0px" }
+          );
 
-    if (reduce || !("IntersectionObserver" in window)) {
-      els.forEach((el) => el.classList.add("is-visible"));
-      return;
-    }
+    const watch = (el: HTMLElement) => {
+      if (el.classList.contains("is-visible")) return;
+      if (io) io.observe(el);
+      else el.classList.add("is-visible");
+    };
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
-    );
+    document.querySelectorAll<HTMLElement>(".reveal").forEach(watch);
 
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
+    const mo = new MutationObserver((mutations) => {
+      mutations.forEach((m) =>
+        m.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.classList.contains("reveal")) watch(node);
+          node.querySelectorAll<HTMLElement>(".reveal").forEach(watch);
+        })
+      );
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      io?.disconnect();
+      mo.disconnect();
+    };
+  }, [routeKey]);
 }

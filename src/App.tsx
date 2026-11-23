@@ -1,33 +1,28 @@
-import About from "./components/About";
-import Contact from "./components/Contact";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import FloatingActions from "./components/FloatingActions";
 import Footer from "./components/Footer";
-import Gallery from "./components/Gallery";
 import Header from "./components/Header";
-import Hero from "./components/Hero";
-import Marquee from "./components/Marquee";
-import Outlets from "./components/Outlets";
+import ScrollManager from "./components/ScrollManager";
 import ScrollProgress from "./components/ScrollProgress";
-import Services from "./components/Services";
-import Testimonial from "./components/Testimonial";
 import { useReveal } from "./hooks/useReveal";
+import Home from "./pages/Home";
+import MenuPage from "./pages/MenuPage";
 
 export default function App() {
-  useReveal();
+  const { pathname } = useLocation();
+  useReveal(pathname);
 
   return (
     <>
       <ScrollProgress />
+      <ScrollManager />
       <Header />
       <main>
-        <Hero />
-        <Marquee />
-        <About />
-        <Services />
-        <Outlets />
-        <Gallery />
-        <Testimonial />
-        <Contact />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/menu" element={<MenuPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
       <Footer />
       <FloatingActions />

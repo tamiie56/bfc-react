@@ -24,6 +24,9 @@ export const SITE = {
   mapQuery: "House 56/1, Road-1, Block-C, Section-13, Mirpur, Dhaka 1216",
   hours: "Saturday - Friday 10.00 am - 11.00 pm",
   orderUrl: "https://engaze.ai/bfc",
+  /** BFC online ordering page the menu items link to (Uttara Jashimuddin outlet) */
+  menuOrderUrl:
+    "https://bfc.engaze.ai/613764cc195989f50819dfad/6141e21d9438e349e43aefb2/pickup",
   feedbackUrl:
     "https://docs.google.com/forms/d/e/1FAIpQLSfmlmVccG_UhmuoXlDgkvLHADrFE2XF1gbK-m7ym0ijy1CqHw/viewform",
   facebook: "https://www.facebook.com/ILoveBFC/",
@@ -75,11 +78,13 @@ export interface FoodItem {
 }
 
 export const FOODS: FoodItem[] = [
-  { title: "Crispy Fried Chicken", price: 125, image: chicken, glow: "rgba(255, 221, 0, 0.38)" },
-  { title: "Burger", price: 175, image: burger, glow: "rgba(255, 40, 20, 0.42)" },
-  { title: "Rice Items", price: 200, image: rice, glow: "rgba(255, 221, 0, 0.38)" },
-  { title: "Side Items", price: 65, image: sides, glow: "rgba(255, 40, 20, 0.42)" },
+  { title: "Crispy Fried Chicken", price: 125, image: chicken, glow: "#33290a" },
+  { title: "Burger", price: 175, image: burger, glow: "#3a1410" },
+  { title: "Rice Items", price: 200, image: rice, glow: "#33290a" },
+  { title: "Side Items", price: 65, image: sides, glow: "#3a1410" },
 ];
+
+export const SERVICES = ["Online Order", "Online Delivery", "Take Away", "Dine-in"];
 
 export interface GalleryItem {
   title: string;

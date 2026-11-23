@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaAngleDown, FaPhoneAlt, FaTimes } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
 import { SITE } from "../data/content";
 import { useActiveSection } from "../hooks/useActiveSection";
 import Logo from "./Logo";
@@ -8,11 +9,16 @@ import Socials from "./Socials";
 const SECTION_IDS = ["home", "about", "services", "outlets", "gallery", "testimonials", "contact"];
 const MORE_IDS = ["services", "outlets", "gallery"];
 
+/** Link target for a section of the home page, works from any page. */
+const to = (id: string) => ({ pathname: "/", hash: `#${id}` });
+
 export default function Header() {
+  const { pathname } = useLocation();
+  const onMenu = pathname === "/menu";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showBar, setShowBar] = useState(true);
-  const active = useActiveSection(SECTION_IDS);
+  const active = useActiveSection(SECTION_IDS, pathname);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -34,7 +40,7 @@ export default function Header() {
   }, [open]);
 
   const close = () => setOpen(false);
-  const cls = (id: string) => (active === id ? "active" : "");
+  const cls = (id: string) => (!onMenu && active === id ? "active" : "");
 
   return (
     <header className={`header ${scrolled ? "header--solid" : ""}`}>
@@ -60,9 +66,9 @@ export default function Header() {
       )}
 
       <nav className="nav">
-        <a href="#home" className="nav__brand" onClick={close} aria-label="BFC - Best Fried Chicken, home">
+        <Link to={to("home")} className="nav__brand" onClick={close} aria-label="BFC - Best Fried Chicken, home">
           <Logo className="nav__logo" />
-        </a>
+        </Link>
 
         <button
           className={`nav__toggle ${open ? "is-open" : ""}`}
@@ -77,25 +83,23 @@ export default function Header() {
 
         <ul className={`nav__menu ${open ? "is-open" : ""}`}>
           <li className={cls("home")}>
-            <a href="#home" onClick={close}>Home</a>
+            <Link to={to("home")} onClick={close}>Home</Link>
           </li>
           <li className={cls("about")}>
-            <a href="#about" onClick={close}>About</a>
+            <Link to={to("about")} onClick={close}>About</Link>
           </li>
-          <li>
-            <a href={SITE.orderUrl} target="_blank" rel="noreferrer">Menu</a>
+          <li className={onMenu ? "active" : ""}>
+            <Link to="/menu" onClick={close}>Menu</Link>
           </li>
-          <li className={`has-dropdown ${MORE_IDS.includes(active) ? "active" : ""}`}>
-            <a href="#gallery" onClick={close}>
+          <li className={`has-dropdown ${!onMenu && MORE_IDS.includes(active) ? "active" : ""}`}>
+            <Link to={to("gallery")} onClick={close}>
               Dropdown <FaAngleDown aria-hidden />
-            </a>
+            </Link>
             <ul className="dropdown">
-              <li><a href="#gallery" onClick={close}>Gallery</a></li>
-              <li><a href="#services" onClick={close}>Services</a></li>
-              <li><a href="#outlets" onClick={close}>Outlets</a></li>
-              <li>
-                <a href={SITE.orderUrl} target="_blank" rel="noreferrer">Menu</a>
-              </li>
+              <li><Link to={to("gallery")} onClick={close}>Gallery</Link></li>
+              <li><Link to={to("services")} onClick={close}>Services</Link></li>
+              <li><Link to={to("outlets")} onClick={close}>Outlets</Link></li>
+              <li><Link to="/menu" onClick={close}>Menu</Link></li>
               <li>
                 <a href={SITE.feedbackUrl} target="_blank" rel="noreferrer">Feedback</a>
               </li>
@@ -105,10 +109,10 @@ export default function Header() {
             <a href={SITE.feedbackUrl} target="_blank" rel="noreferrer">Send Feedback</a>
           </li>
           <li className={cls("testimonials")}>
-            <a href="#testimonials" onClick={close}>Reviews</a>
+            <Link to={to("testimonials")} onClick={close}>Reviews</Link>
           </li>
           <li className={cls("contact")}>
-            <a href="#contact" onClick={close}>Contact</a>
+            <Link to={to("contact")} onClick={close}>Contact</Link>
           </li>
           <li className="nav__cta">
             <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="btn btn--yellow btn--sm">
