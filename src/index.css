@@ -9,8 +9,8 @@
   --ink-2: #241915;
   --cream: #fff7ea;
   --muted: #6b5f5a;
-  --font-body: "Raleway", sans-serif;
-  --font-head: "Oswald", sans-serif;
+  --font-body: "Raleway", "Hind Siliguri", sans-serif;
+  --font-head: "Oswald", "Hind Siliguri", sans-serif;
   --font-script: "Pacifico", cursive;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -34,6 +34,9 @@ body {
   background: #fff;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Raleway defaults to old-style digits (uneven heights) - force even, lining numerals everywhere */
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
 }
 
 img {
@@ -168,17 +171,17 @@ button {
 
 .btn--red {
   background: var(--red);
-  box-shadow: 0 10px 28px rgba(194, 13, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 
 .btn--red:hover {
-  box-shadow: 0 16px 36px rgba(194, 13, 0, 0.6);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
 }
 
 .btn--yellow {
   background: var(--yellow);
   color: #1b1209;
-  box-shadow: 0 10px 28px rgba(255, 200, 10, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .btn--ghost {
@@ -276,7 +279,7 @@ button {
   background: var(--red);
   color: #fff;
   font-size: 1.5rem;
-  box-shadow: 0 10px 26px rgba(194, 13, 0, 0.5);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
   opacity: 0;
   transform: translateY(20px) scale(0.8);
   pointer-events: none;
@@ -528,7 +531,7 @@ button {
   min-width: 180px;
   padding: 0.5rem;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.97);
+  background: #fff;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
   opacity: 0;
   visibility: hidden;
@@ -841,7 +844,7 @@ button {
   border-radius: 50%;
   background: var(--yellow);
   border: 6px solid var(--red);
-  box-shadow: 0 26px 50px rgba(194, 13, 0, 0.22);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.28);
 }
 
 .about__oval::before {
@@ -1178,7 +1181,7 @@ button {
 
 .search:focus-within {
   border-color: var(--red);
-  box-shadow: 0 14px 36px rgba(194, 13, 0, 0.2);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
 }
 
 .search svg {
@@ -1228,7 +1231,7 @@ button {
   background: var(--red);
   border-color: var(--red);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(194, 13, 0, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .chip.is-active svg {
@@ -1489,7 +1492,7 @@ button {
   border-radius: 50%;
   background: var(--red);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(194, 13, 0, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .stars {
@@ -1738,8 +1741,7 @@ button {
 }
 
 .footer__text a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 .footer__text a:hover {
@@ -1823,7 +1825,7 @@ button {
     padding: 5.5rem 2rem 2rem;
     z-index: 2;
     overflow-y: auto;
-    background: rgba(14, 8, 6, 0.97);
+    background: #0e0806;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-16px);
@@ -2340,9 +2342,9 @@ button {
 
 .dish__line strong small {
   margin-right: 0.35rem;
-  font-family: var(--font-body);
-  font-size: 0.62rem;
-  font-weight: 700;
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  font-weight: 500;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
@@ -2462,37 +2464,38 @@ button {
 .modal__card {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(260px, 350px) 1fr;
+  grid-template-columns: minmax(260px, 360px) 1fr;
   grid-template-rows: minmax(0, 1fr);
-  width: min(880px, 100%);
+  width: min(860px, 100%);
   max-height: 92vh;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 20px;
   background: var(--ink);
   color: #fff;
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   animation: stagePop 0.4s var(--ease) both;
 }
 
 .modal__close {
   position: absolute;
-  top: 0.9rem;
-  right: 0.9rem;
+  top: 1rem;
+  right: 1rem;
   z-index: 3;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #3a2a24;
   border-radius: 50%;
-  background: #3a2a24;
+  background: var(--ink-2);
   color: #fff;
-  transition: background 0.25s, transform 0.25s;
+  font-size: 0.8rem;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .modal__close:hover {
   background: var(--red);
-  transform: rotate(90deg);
+  border-color: var(--red);
 }
 
 .modal__media {
@@ -2511,7 +2514,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 1.6rem;
+  padding: 2.6rem 1.6rem 1.6rem;
   animation: stagePop 0.5s var(--ease) both;
 }
 
@@ -2542,7 +2545,7 @@ button {
   padding: 0;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 18px 36px rgba(60, 20, 10, 0.3);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
 }
 
 .modal__chip {
@@ -2550,45 +2553,53 @@ button {
   top: 1rem;
   left: 1rem;
   z-index: 2;
-  padding: 0.35rem 0.95rem;
-  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
   background: var(--ink);
   color: var(--yellow);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
 }
 
 .modal__body {
   display: flex;
   flex-direction: column;
-  padding: 2.4rem 2.2rem 1.8rem;
+  padding: 2.2rem 2.2rem 1.6rem;
   overflow-y: auto;
 }
 
 .modal__body h2 {
-  padding-right: 2.6rem;
+  padding-right: 2.8rem;
   font-family: var(--font-head);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  line-height: 1.12;
-  letter-spacing: 1.5px;
+  font-size: clamp(1.7rem, 3.6vw, 2.3rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .modal__price {
-  margin-top: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
   font-family: var(--font-head);
-  font-size: 2.6rem;
   line-height: 1.1;
+}
+
+.modal__price span {
+  font-size: 2.1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   color: var(--yellow);
 }
 
 .modal__price small {
-  margin-right: 0.5rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-family: var(--font-head);
+  font-size: 0.8rem;
+  font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
@@ -2596,46 +2607,49 @@ button {
 
 .modal__desc {
   margin-top: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .modal__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 1rem;
+  gap: 0.4rem;
+  margin-top: 1.1rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #33241e;
 }
 
 .modal__tags li {
-  padding: 0.22rem 0.8rem;
-  border-radius: 999px;
-  background: #2b201b;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid #4a342b;
+  border-radius: 6px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .modal__buy {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-top: auto;
-  padding: 1.1rem 0 1rem;
-  border-top: 1px solid #3a2b25;
+  padding: 1.2rem 0;
 }
 
 .modal__buy > div {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .modal__buy span {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
 }
@@ -2647,15 +2661,17 @@ button {
 .modal__total strong {
   font-family: var(--font-head);
   font-size: 2rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
   color: #fff;
 }
 
 .modal__add {
   width: 100%;
-  padding: 1.1rem;
-  font-size: 0.9rem;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  box-shadow: none;
 }
 
 .modal__foot {
@@ -2664,16 +2680,18 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #33241e;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .modal__foot a {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: rgba(255, 255, 255, 0.8);
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .modal__foot a:hover {
@@ -2780,7 +2798,7 @@ button {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  box-shadow: 0 16px 36px rgba(194, 13, 0, 0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
   animation: rise 0.4s var(--ease) both;
   transition: background 0.25s, color 0.25s;
 }
@@ -3286,8 +3304,8 @@ button {
     padding: 1.4rem 1.3rem 1.4rem;
   }
 
-  .modal__price {
-    font-size: 2.1rem;
+  .modal__price span {
+    font-size: 1.9rem;
   }
 }
 
