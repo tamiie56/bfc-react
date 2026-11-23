@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { FaAngleDown, FaPhoneAlt, FaTimes } from "react-icons/fa";
+import { FaAngleDown, FaPhoneAlt, FaShoppingBag, FaTimes } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
+import { useCart } from "../cart/CartContext";
 import { SITE } from "../data/content";
 import { useActiveSection } from "../hooks/useActiveSection";
 import Logo from "./Logo";
@@ -14,6 +15,7 @@ const to = (id: string) => ({ pathname: "/", hash: `#${id}` });
 
 export default function Header() {
   const { pathname } = useLocation();
+  const { count, openCart } = useCart();
   const onMenu = pathname === "/menu";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -115,20 +117,27 @@ export default function Header() {
             <Link to={to("contact")} onClick={close}>Contact</Link>
           </li>
           <li className="nav__cta">
-            <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="btn btn--yellow btn--sm">
+            <Link to="/menu" className="btn btn--yellow btn--sm" onClick={close}>
               Order Now
-            </a>
+            </Link>
           </li>
         </ul>
 
-        <a
-          href={SITE.orderUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="btn btn--yellow btn--sm nav__order"
-        >
+        <Link to="/menu" className="btn btn--yellow btn--sm nav__order">
           Order Now
-        </a>
+        </Link>
+
+        <button
+          className="nav__cart"
+          onClick={() => {
+            close();
+            openCart();
+          }}
+          aria-label={`Open cart, ${count} ${count === 1 ? "item" : "items"}`}
+        >
+          <FaShoppingBag aria-hidden />
+          {count > 0 && <span className="nav__badge">{count}</span>}
+        </button>
       </nav>
     </header>
   );

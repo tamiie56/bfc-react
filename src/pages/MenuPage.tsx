@@ -5,29 +5,26 @@ import ChipScroller from "../components/ChipScroller";
 import DishModal from "../components/DishModal";
 import heroImg from "../assets/images/hero.jpg";
 import { SERVICES, SITE } from "../data/content";
-import { DELIVERY_CHARGE, MENU } from "../data/menu";
+import { DELIVERY_CHARGE, MENU, fallbackFor } from "../data/menu";
 import type { Dish as DishType, MenuCategory } from "../data/menu";
 import { delay } from "../utils/style";
 
-function Dish({ dish, onOpen }: { dish: DishType; onOpen: () => void }) {
+function Dish({ dish, catId, onOpen }: { dish: DishType; catId: string; onOpen: () => void }) {
   const [broken, setBroken] = useState(false);
-  const hasImg = dish.image && !broken;
+  const fallback = fallbackFor(catId);
+  const src = dish.image && !broken ? dish.image : fallback.src;
 
   return (
     <li className="dish">
       <button className="dish__link" onClick={onOpen} aria-label={`View ${dish.name}`}>
         <span className="dish__thumb">
-          {hasImg ? (
-            <img
-              src={dish.image}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={() => setBroken(true)}
-            />
-          ) : (
-            <i aria-hidden />
-          )}
+          <img
+            src={src}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setBroken(true)}
+          />
         </span>
         <div className="dish__body">
           <div className="dish__line">
@@ -90,7 +87,7 @@ export default function MenuPage() {
 
       <section className="menu section">
         <div className="container">
-          <label className="search menu__search reveal">
+          <label className="search menu__search reveal" id="menu-top">
             <FaSearch aria-hidden />
             <input
               type="search"
@@ -136,7 +133,7 @@ export default function MenuPage() {
                 </header>
                 <ul className="board__items">
                   {c.items.map((d) => (
-                    <Dish key={d.name} dish={d} onOpen={() => setSelected({ dish: d, cat: c })} />
+                    <Dish key={d.name} dish={d} catId={c.id} onOpen={() => setSelected({ dish: d, cat: c })} />
                   ))}
                 </ul>
               </article>
@@ -151,13 +148,14 @@ export default function MenuPage() {
 
           <p className="menu__note">
             Menu and prices are from the BFC online ordering page (Uttara Jashimuddin outlet) and may
-            vary by outlet. Delivery charge: ৳{DELIVERY_CHARGE}.
+            vary by outlet. Delivery charge: ৳{DELIVERY_CHARGE}. Photos of similar items are shared where
+            an item has no photo of its own.
           </p>
 
           <div className="menu-order reveal">
             <div>
               <h3>Order your favourite BFC</h3>
-              <p>Order online or call us - we deliver, or pick up your order at the outlet.</p>
+              <p>Pick your items, add them to the cart and place your order - delivery, take away or dine-in.</p>
               <ul className="menu-order__tags">
                 {SERVICES.map((s) => (
                   <li key={s}>{s}</li>
@@ -165,9 +163,12 @@ export default function MenuPage() {
               </ul>
             </div>
             <div className="menu-order__cta">
-              <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="btn btn--red">
-                Order Online <FaArrowRight aria-hidden />
-              </a>
+              <button
+                className="btn btn--red"
+                onClick={() => document.getElementById("menu-top")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              >
+                Start Your Order <FaArrowRight aria-hidden />
+              </button>
               <a href={SITE.phoneHref} className="btn btn--ghost">
                 <FaPhoneAlt aria-hidden /> {SITE.phone}
               </a>

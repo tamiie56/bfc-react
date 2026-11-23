@@ -21,6 +21,24 @@
     <title>BFC (Best Fried Chicken)</title>
   </head>
   <body>
+    <!-- Netlify Forms: lets Netlify detect the order form (the real one is submitted from React) -->
+    <form name="order" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="order" />
+      <input name="bot-field" />
+      <input name="orderId" />
+      <input name="orderType" />
+      <input name="name" />
+      <input name="phone" />
+      <input name="area" />
+      <input name="address" />
+      <textarea name="note"></textarea>
+      <textarea name="items"></textarea>
+      <input name="subtotal" />
+      <input name="delivery" />
+      <input name="total" />
+      <input name="hasFromItems" />
+      <input name="placedAt" />
+    </form>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

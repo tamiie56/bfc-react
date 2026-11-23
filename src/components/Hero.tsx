@@ -1,6 +1,6 @@
 import { FaArrowRight } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import heroImg from "../assets/images/hero.jpg";
-import { SITE } from "../data/content";
 import { useParallax } from "../hooks/useParallax";
 import { delay } from "../utils/style";
 import OpenStatus from "./OpenStatus";
@@ -29,9 +29,9 @@ export default function Hero() {
         </p>
 
         <div className="hero__cta rise" style={delay(800)}>
-          <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="btn btn--red">
+          <Link to="/menu" className="btn btn--red">
             Order Now <FaArrowRight aria-hidden />
-          </a>
+          </Link>
           <a href="#services" className="btn btn--ghost">
             Explore Foods
           </a>

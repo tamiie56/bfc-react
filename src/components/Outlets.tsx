@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { FaArrowRight, FaMapMarkerAlt, FaPhoneAlt, FaSearch } from "react-icons/fa";
 import { AREAS, OUTLET_COUNT, SITE } from "../data/content";
 
@@ -59,9 +60,9 @@ export default function Outlets() {
                 <p>Best Fried Chicken is serving fresh, hygienic and tasty food in {current}, Dhaka.</p>
                 <p className="outlet-card__hours">Outlet Opening Hours: {SITE.hours}</p>
                 <div className="outlet-card__cta">
-                  <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="btn btn--yellow">
+                  <Link to="/menu" className="btn btn--yellow">
                     Order Now <FaArrowRight aria-hidden />
-                  </a>
+                  </Link>
                   <a href={SITE.phoneHref} className="btn btn--ghost">
                     <FaPhoneAlt aria-hidden /> {SITE.phone}
                   </a>

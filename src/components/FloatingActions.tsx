@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaPhoneAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { SITE } from "../data/content";
 
 /** Sticky Call / Order bar - mobile only (hidden by CSS on larger screens). */
@@ -18,9 +19,9 @@ export default function FloatingActions() {
       <a href={SITE.phoneHref} className="mbar__call">
         <FaPhoneAlt aria-hidden /> Call
       </a>
-      <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="mbar__order">
+      <Link to="/menu" className="mbar__order">
         Order Now
-      </a>
+      </Link>
     </div>
   );
 }

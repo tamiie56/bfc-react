@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { FOODS, SITE } from "../data/content";
+import { FOODS } from "../data/content";
 import type { FoodItem } from "../data/content";
 import { cssVars } from "../utils/style";
 import CountUp from "./CountUp";
@@ -18,9 +18,9 @@ function Slide({ food, mode }: { food: FoodItem; mode: "in" | "out" }) {
         <div className="stage__price">
           BDT ৳{mode === "in" ? <CountUp end={food.price} duration={900} /> : food.price}
         </div>
-        <a href={SITE.orderUrl} target="_blank" rel="noreferrer" className="btn btn--yellow">
+        <Link to="/menu" className="btn btn--yellow">
           Order Now <FaArrowRight aria-hidden />
-        </a>
+        </Link>
       </div>
     </div>
   );

@@ -1,27 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { FaArrowRight, FaPhoneAlt, FaTimes } from "react-icons/fa";
-import chicken from "../assets/images/1.png";
-import burger from "../assets/images/2.png";
-import rice from "../assets/images/3.png";
-import sides from "../assets/images/4.png";
-import combo from "../assets/images/ab2.png";
+import { FaPhoneAlt, FaShoppingBag, FaTimes } from "react-icons/fa";
+import { useCart } from "../cart/CartContext";
 import { SERVICES, SITE } from "../data/content";
-import { DELIVERY_CHARGE } from "../data/menu";
+import { DELIVERY_CHARGE, fallbackFor } from "../data/menu";
 import type { Dish } from "../data/menu";
-
-/** Local picture used when an item has no photo of its own */
-const FALLBACK: Record<string, { src: string; round: boolean }> = {
-  "fried-chicken": { src: chicken, round: true },
-  "chicken-wings": { src: chicken, round: true },
-  "chicken-delight": { src: chicken, round: true },
-  "chicken-burger": { src: burger, round: true },
-  "rice-items": { src: rice, round: true },
-  "rice-meal": { src: rice, round: true },
-  "side-menu": { src: sides, round: true },
-  beverage: { src: sides, round: true },
-  "chicken-wrap": { src: burger, round: true },
-};
-const DEFAULT_FALLBACK = { src: combo, round: false };
+import QtyStepper from "./QtyStepper";
 
 interface Props {
   dish: Dish;
@@ -31,22 +14,23 @@ interface Props {
 }
 
 export default function DishModal({ dish, categoryId, categoryTitle, onClose }: Props) {
+  const { add } = useCart();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [step, setStep] = useState(0);
+  const [qty, setQty] = useState(1);
 
-  // try a bigger version of the photo first, then the original, then the local picture
+  // bigger photo first, then the original, then the local picture
   const sources = Array.from(
     new Set(
-      [
-        dish.image?.replace(/tr-(180|280)xauto/, "tr-560xauto"),
-        dish.image,
-      ].filter((s): s is string => Boolean(s))
+      [dish.image?.replace(/tr-(180|280)xauto/, "tr-560xauto"), dish.image].filter((s): s is string =>
+        Boolean(s)
+      )
     )
   );
-  const fallback = FALLBACK[categoryId] ?? DEFAULT_FALLBACK;
+  const fallback = fallbackFor(categoryId);
   const remote = step < sources.length;
   const src = remote ? sources[step] : fallback.src;
-  const round = remote ? false : fallback.round;
+  const round = !remote && fallback.round;
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -61,6 +45,21 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
     };
   }, [onClose]);
 
+  const addToCart = () => {
+    add(
+      {
+        key: `${categoryId}:${dish.name}`,
+        name: dish.name,
+        category: categoryTitle,
+        price: dish.price,
+        from: dish.from,
+        image: dish.image ?? fallback.src,
+      },
+      qty
+    );
+    onClose();
+  };
+
   return (
     <div className="modal" role="dialog" aria-modal="true" aria-label={dish.name} onClick={onClose}>
       <div className="modal__card" onClick={(e) => e.stopPropagation()}>
@@ -68,22 +67,24 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
           <FaTimes />
         </button>
 
-        <div className="modal__media">
+        <div className={`modal__media ${remote ? "" : "is-fallback"}`}>
+          <span className="modal__chip">{categoryTitle}</span>
           <img
             src={src}
             alt={dish.name}
-            className={`${round ? "is-round" : ""} ${!remote && !round ? "is-contain" : ""}`}
+            className={round ? "is-round" : ""}
             referrerPolicy="no-referrer"
             onError={() => remote && setStep((s) => s + 1)}
           />
         </div>
 
         <div className="modal__body">
-          <span className="modal__cat">{categoryTitle}</span>
           <h2>{dish.name}</h2>
+
           <div className="modal__price">
             {dish.from && <small>From</small>}৳{dish.price}
           </div>
+
           {dish.desc && <p className="modal__desc">{dish.desc}</p>}
 
           <ul className="modal__tags">
@@ -92,15 +93,27 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
             ))}
           </ul>
 
-          <div className="modal__cta">
-            <a href={SITE.menuOrderUrl} target="_blank" rel="noreferrer" className="btn btn--red">
-              Order Now <FaArrowRight aria-hidden />
-            </a>
-            <a href={SITE.phoneHref} className="btn btn--ghost">
-              <FaPhoneAlt aria-hidden /> {SITE.phone}
-            </a>
+          <div className="modal__buy">
+            <div className="modal__qty">
+              <span>Quantity</span>
+              <QtyStepper value={qty} onChange={setQty} />
+            </div>
+            <div className="modal__total">
+              <span>{dish.from ? "Starting at" : "Total"}</span>
+              <strong>৳{qty * dish.price}</strong>
+            </div>
           </div>
-          <p className="modal__note">Delivery charge: ৳{DELIVERY_CHARGE}</p>
+
+          <button className="btn btn--red modal__add" onClick={addToCart}>
+            <FaShoppingBag aria-hidden /> Add to Cart
+          </button>
+
+          <div className="modal__foot">
+            <a href={SITE.phoneHref}>
+              <FaPhoneAlt aria-hidden /> Prefer to call? {SITE.phone}
+            </a>
+            <span>Delivery charge ৳{DELIVERY_CHARGE}</span>
+          </div>
         </div>
       </div>
     </div>

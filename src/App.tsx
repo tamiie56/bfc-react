@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import CartBar from "./components/CartBar";
+import CartDrawer from "./components/CartDrawer";
 import FloatingActions from "./components/FloatingActions";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -26,6 +28,8 @@ export default function App() {
       </main>
       <Footer />
       <FloatingActions />
+      <CartBar />
+      <CartDrawer />
     </>
   );
 }
