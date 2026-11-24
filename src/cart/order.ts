@@ -1,7 +1,10 @@
 import type { CartLine } from "./CartContext";
 
-export type OrderType = "Delivery" | "Take Away" | "Dine-in";
-export const ORDER_TYPES: OrderType[] = ["Delivery", "Take Away", "Dine-in"];
+export type OrderType = "Online Order" | "Online Delivery" | "Take Away" | "Dine-in";
+export const ORDER_TYPES: OrderType[] = ["Online Order", "Online Delivery", "Take Away", "Dine-in"];
+
+/** Only home delivery needs an address and the delivery charge. */
+export const isDelivery = (t: OrderType): boolean => t === "Online Delivery";
 
 const PHONE_RE = /^(?:\+?88)?01[3-9]\d{8}$/;
 

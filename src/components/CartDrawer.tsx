@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { FaCheckCircle, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
 import type { CartLine } from "../cart/CartContext";
-import { ORDER_TYPES, itemsText, newOrderId, submitOrder, validPhone } from "../cart/order";
+import { ORDER_TYPES, isDelivery, itemsText, newOrderId, submitOrder, validPhone } from "../cart/order";
 import type { OrderType } from "../cart/order";
 import { AREAS, SITE } from "../data/content";
 import { DELIVERY_CHARGE } from "../data/menu";
@@ -47,10 +47,16 @@ function loadCustomer() {
 }
 
 export default function CartDrawer() {
-  const { lines, subtotal, hasFrom, setQty, remove, clear, isOpen, closeCart, toast } = useCart();
+  const cart = useCart();
+  const { setQty, remove, clear, isOpen, closeCart, toast, orderType: type, setOrderType: setType, direct } = cart;
 
+  // "Order Now" checks out just that one item; otherwise the whole cart
+  const lines = direct ? [direct] : cart.lines;
+  const subtotal = direct ? direct.qty * direct.price : cart.subtotal;
+  const hasFrom = direct ? Boolean(direct.from) : cart.hasFrom;
+
+  const wasDirect = useRef(false);
   const [step, setStep] = useState<Step>("cart");
-  const [type, setType] = useState<OrderType>("Delivery");
   const [customer, setCustomer] = useState(loadCustomer);
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -58,7 +64,7 @@ export default function CartDrawer() {
   const [failed, setFailed] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
 
-  const fee = type === "Delivery" ? DELIVERY_CHARGE : 0;
+  const fee = isDelivery(type) ? DELIVERY_CHARGE : 0;
   const total = subtotal + fee;
 
   // lock page scroll + Esc to close while open
@@ -77,15 +83,25 @@ export default function CartDrawer() {
 
   // reset the flow when the drawer is closed after an order / when the cart empties
   useEffect(() => {
-    if (!isOpen && step === "done") {
+    if (isOpen) return;
+    if (step === "done" || wasDirect.current) {
       setStep("cart");
       setDone(null);
     }
+    wasDirect.current = false;
   }, [isOpen, step]);
 
   useEffect(() => {
     if (step === "checkout" && lines.length === 0) setStep("cart");
   }, [step, lines.length]);
+
+  // Order Now: jump straight to checkout
+  useEffect(() => {
+    if (direct) {
+      wasDirect.current = true;
+      setStep("checkout");
+    }
+  }, [direct]);
 
   const set = (field: "name" | "phone" | "address" | "area", value: string) => {
     setCustomer((c) => ({ ...c, [field]: value }));
@@ -96,7 +112,7 @@ export default function CartDrawer() {
     const e: Record<string, string> = {};
     if (customer.name.trim().length < 2) e.name = "Please enter your name";
     if (!validPhone(customer.phone)) e.phone = "Enter a valid mobile number (e.g. 01XXXXXXXXX)";
-    if (type === "Delivery" && customer.address.trim().length < 8) e.address = "Please enter your full delivery address";
+    if (isDelivery(type) && customer.address.trim().length < 8) e.address = "Please enter your full delivery address";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -113,7 +129,7 @@ export default function CartDrawer() {
       name: customer.name.trim(),
       phone: customer.phone.trim(),
       area: customer.area,
-      address: type === "Delivery" ? customer.address.trim() : "",
+      address: isDelivery(type) ? customer.address.trim() : "",
       note: note.trim(),
       items: itemsText(lines),
       subtotal: String(subtotal),
@@ -148,7 +164,7 @@ export default function CartDrawer() {
         total,
         hasFrom,
       });
-      clear();
+      if (!direct) clear();
       setNote("");
       setStep("done");
     } catch {
@@ -267,7 +283,7 @@ export default function CartDrawer() {
                   </label>
 
                   <label className="field">
-                    <span>{type === "Delivery" ? "Nearest outlet area" : "Outlet area"}</span>
+                    <span>{isDelivery(type) ? "Nearest outlet area" : "Outlet area"}</span>
                     <select value={customer.area} onChange={(e) => set("area", e.target.value)}>
                       {AREAS.map((a) => (
                         <option key={a} value={a}>
@@ -277,7 +293,7 @@ export default function CartDrawer() {
                     </select>
                   </label>
 
-                  {type === "Delivery" && (
+                  {isDelivery(type) && (
                     <label className="field">
                       <span>Delivery address</span>
                       <textarea
@@ -305,7 +321,7 @@ export default function CartDrawer() {
                     <div className="sum"><span>Subtotal</span><strong>৳{subtotal}</strong></div>
                     <div className="sum"><span>Delivery charge</span><strong>{fee ? `৳${fee}` : "—"}</strong></div>
                     <div className="sum sum--total"><span>Total</span><strong>৳{total}</strong></div>
-                    <p className="drawer__hint">Payment: cash on {type === "Delivery" ? "delivery" : "pickup / at the outlet"}.</p>
+                    <p className="drawer__hint">Payment: cash on {isDelivery(type) ? "delivery" : type === "Dine-in" ? "payment at the outlet" : "pickup / at the outlet"}.</p>
                     {hasFrom && (
                       <p className="drawer__hint">&ldquo;From&rdquo; prices are confirmed on the confirmation call.</p>
                     )}
@@ -322,8 +338,13 @@ export default function CartDrawer() {
                   <button type="submit" className="btn btn--red drawer__btn" disabled={busy}>
                     {busy ? "Placing order…" : `Place Order · ৳${total}`}
                   </button>
-                  <button type="button" className="drawer__back" onClick={() => setStep("cart")} disabled={busy}>
-                    ← Back to cart
+                  <button
+                    type="button"
+                    className="drawer__back"
+                    onClick={() => (direct ? closeCart() : setStep("cart"))}
+                    disabled={busy}
+                  >
+                    {direct ? "← Cancel" : "← Back to cart"}
                   </button>
                 </footer>
               </form>
@@ -342,7 +363,7 @@ export default function CartDrawer() {
                 <div className="done__box">
                   <div className="done__meta">
                     <span>{done.type}</span>
-                    <span>{done.type === "Delivery" ? done.address : done.area}</span>
+                    <span>{isDelivery(done.type) ? done.address : done.area}</span>
                   </div>
                   <ul>
                     {done.lines.map((l) => (

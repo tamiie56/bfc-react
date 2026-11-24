@@ -2457,22 +2457,25 @@ button {
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(10, 5, 3, 0.8);
+  background: rgba(12, 6, 4, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   animation: fade 0.25s ease;
 }
 
 .modal__card {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(260px, 360px) 1fr;
+  grid-template-columns: minmax(260px, 340px) 1fr;
   grid-template-rows: minmax(0, 1fr);
-  width: min(860px, 100%);
+  width: min(920px, 100%);
   max-height: 92vh;
   overflow: hidden;
-  border-radius: 20px;
-  background: var(--ink);
+  border: 1px solid rgba(255, 200, 10, 0.14);
+  border-radius: 24px;
+  background: linear-gradient(160deg, #20140f 0%, #150e0c 55%, #120b09 100%);
   color: #fff;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
   animation: stagePop 0.4s var(--ease) both;
 }
 
@@ -2485,16 +2488,17 @@ button {
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid #3a2a24;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
-  background: var(--ink-2);
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s, transform 0.3s var(--ease);
 }
 
 .modal__close:hover {
   background: var(--red);
   border-color: var(--red);
+  transform: rotate(90deg);
 }
 
 .modal__media {
@@ -2502,18 +2506,21 @@ button {
   display: grid;
   place-items: center;
   min-height: 340px;
-  background: #fff;
+  background:
+    radial-gradient(circle at 50% 46%, #ffffff 0%, #fff6e3 58%, #f7e3bd 100%);
 }
 
 .modal__media.is-fallback {
-  background: var(--cream);
+  background: radial-gradient(circle at 50% 46%, #fff9ee 0%, #fbe9c6 100%);
 }
 
 .modal__media img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 2.6rem 1.6rem 1.6rem;
+  padding: 3rem 1.6rem 1.8rem;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 14px 18px rgba(80, 40, 10, 0.18));
   animation: stagePop 0.5s var(--ease) both;
 }
 
@@ -2522,6 +2529,8 @@ button {
   height: auto;
   padding: 0;
   object-fit: contain;
+  mix-blend-mode: normal;
+  filter: none;
 }
 
 .modal__ph {
@@ -2544,35 +2553,37 @@ button {
   padding: 0;
   border-radius: 50%;
   object-fit: cover;
+  mix-blend-mode: normal;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
 }
 
 .modal__chip {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  top: 1.1rem;
+  left: 1.1rem;
   z-index: 2;
-  padding: 0.35rem 0.9rem;
-  border-radius: 6px;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
   background: var(--ink);
   color: var(--yellow);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .modal__body {
   display: flex;
   flex-direction: column;
-  padding: 2.2rem 2.2rem 1.6rem;
+  padding: 2rem 2.1rem 1.4rem;
   overflow-y: auto;
 }
 
 .modal__body h2 {
   padding-right: 2.8rem;
   font-family: var(--font-head);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-size: clamp(1.7rem, 3.6vw, 2.3rem);
   line-height: 1.12;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -2582,45 +2593,126 @@ button {
   display: flex;
   align-items: baseline;
   gap: 0.6rem;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   font-family: var(--font-head);
-  font-size: 2.6rem;
+  font-size: 2.3rem;
   line-height: 1.1;
   color: var(--yellow);
 }
 
 .modal__price small {
   font-family: var(--font-head);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .modal__desc {
-  margin-top: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
+  margin-top: 0.7rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.74);
 }
 
-.modal__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 1.1rem;
-  padding-bottom: 1.2rem;
-  border-bottom: 1px solid #33241e;
+/* order type picker */
+.modal__types {
+  min-width: 0;
+  margin: 1.3rem 0 0;
+  padding: 1.1rem 0 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
 
-.modal__tags li {
-  padding: 0.25rem 0.7rem;
-  border: 1px solid #4a342b;
-  border-radius: 6px;
-  font-size: 0.66rem;
+.modal__types legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 0.7rem;
+  padding: 0;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.modal__typeGrid {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.modal__typeGrid label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, transform 0.25s var(--ease);
+}
+
+.modal__typeGrid label:hover {
+  border-color: rgba(255, 200, 10, 0.45);
+  transform: translateY(-2px);
+}
+
+.modal__typeGrid label.is-active {
+  border-color: var(--yellow);
+  background: rgba(255, 200, 10, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 200, 10, 0.1);
+}
+
+.modal__typeGrid input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal__typeGrid input:focus-visible + svg {
+  outline: 2px solid var(--yellow);
+  outline-offset: 4px;
+}
+
+.modal__typeGrid svg {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.8);
+  transition: background 0.25s, color 0.25s;
+}
+
+.modal__typeGrid label.is-active svg {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.modal__typeText {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.modal__typeText b {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+}
+
+.modal__typeText em {
+  font-style: normal;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .modal__buy {
@@ -2628,8 +2720,11 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: auto;
-  padding: 1.2rem 0;
+  margin-top: 1.1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .modal__buy > div {
@@ -2638,7 +2733,7 @@ button {
 }
 
 .modal__buy span {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -2651,18 +2746,45 @@ button {
 
 .modal__total strong {
   font-family: var(--font-head);
-  font-size: 2rem;
+  font-size: 1.9rem;
   font-weight: 500;
   line-height: 1;
   color: #fff;
 }
 
-.modal__add {
+.modal__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 1.1rem;
+}
+
+.modal__btn {
   width: 100%;
-  padding: 1rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  box-shadow: none;
+  padding: 1rem 0.8rem;
+  border-radius: 14px;
+  font-size: 0.82rem;
+  letter-spacing: 1.5px;
+}
+
+.modal__btn--cart {
+  border: 1.5px solid var(--yellow);
+  background: transparent;
+  color: var(--yellow);
+}
+
+.modal__btn--cart:hover {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.modal__btn--now {
+  background: linear-gradient(135deg, var(--red-hot) 0%, var(--red) 100%);
+  box-shadow: 0 10px 26px rgba(194, 13, 0, 0.38);
+}
+
+.modal__btn--now:hover {
+  box-shadow: 0 16px 34px rgba(194, 13, 0, 0.5);
 }
 
 .modal__foot {
@@ -2672,8 +2794,8 @@ button {
   justify-content: space-between;
   gap: 0.6rem;
   margin-top: 1.1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #33241e;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.6);
 }
@@ -3068,7 +3190,7 @@ button {
 
 .otype {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   margin: 0 0 1.1rem;
   padding: 0;
@@ -3297,6 +3419,20 @@ button {
 
   .modal__price {
     font-size: 2.1rem;
+  }
+
+  .modal__typeText em {
+    display: none;
+  }
+
+  .modal__typeGrid label {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .modal__btn {
+    padding: 0.95rem 0.5rem;
+    font-size: 0.76rem;
+    letter-spacing: 1px;
   }
 }
 

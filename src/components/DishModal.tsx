@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { FaPhoneAlt, FaShoppingBag, FaTimes } from "react-icons/fa";
+import { FaBolt, FaBoxOpen, FaMobileAlt, FaMotorcycle, FaPhoneAlt, FaShoppingBag, FaTimes, FaUtensils } from "react-icons/fa";
+import type { IconType } from "react-icons";
 import { useCart } from "../cart/CartContext";
-import { SERVICES, SITE } from "../data/content";
+import { ORDER_TYPES, isDelivery } from "../cart/order";
+import type { OrderType } from "../cart/order";
+import { SITE } from "../data/content";
 import { DELIVERY_CHARGE, PLACEHOLDER, dishImage } from "../data/menu";
 import type { Dish } from "../data/menu";
 import QtyStepper from "./QtyStepper";
@@ -13,8 +16,22 @@ interface Props {
   onClose: () => void;
 }
 
+const TYPE_ICONS: Record<OrderType, IconType> = {
+  "Online Order": FaMobileAlt,
+  "Online Delivery": FaMotorcycle,
+  "Take Away": FaBoxOpen,
+  "Dine-in": FaUtensils,
+};
+
+const TYPE_HINTS: Record<OrderType, string> = {
+  "Online Order": "Order now, we confirm by call",
+  "Online Delivery": "Delivered to your door",
+  "Take Away": "Pick up at the outlet",
+  "Dine-in": "Eat at the outlet",
+};
+
 export default function DishModal({ dish, categoryId, categoryTitle, onClose }: Props) {
-  const { add } = useCart();
+  const { add, orderNow, orderType, setOrderType } = useCart();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [step, setStep] = useState(0);
   const [qty, setQty] = useState(1);
@@ -42,18 +59,23 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
     };
   }, [onClose]);
 
+  const line = {
+    key: `${categoryId}:${dish.name}`,
+    name: dish.name,
+    category: categoryTitle,
+    price: dish.price,
+    from: dish.from,
+    image: photo ?? PLACEHOLDER,
+  };
+
   const addToCart = () => {
-    add(
-      {
-        key: `${categoryId}:${dish.name}`,
-        name: dish.name,
-        category: categoryTitle,
-        price: dish.price,
-        from: dish.from,
-        image: photo ?? PLACEHOLDER,
-      },
-      qty
-    );
+    add(line, qty);
+    onClose();
+  };
+
+  // single-item checkout: the cart is left as it is
+  const orderThisNow = () => {
+    orderNow(line, qty);
     onClose();
   };
 
@@ -86,11 +108,31 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
 
           {dish.desc && <p className="modal__desc">{dish.desc}</p>}
 
-          <ul className="modal__tags">
-            {SERVICES.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
+          <fieldset className="modal__types">
+            <legend>How would you like to order?</legend>
+            <div className="modal__typeGrid">
+              {ORDER_TYPES.map((t) => {
+                const Icon = TYPE_ICONS[t];
+                const active = orderType === t;
+                return (
+                  <label key={t} className={active ? "is-active" : ""}>
+                    <input
+                      type="radio"
+                      name="dishOrderType"
+                      value={t}
+                      checked={active}
+                      onChange={() => setOrderType(t)}
+                    />
+                    <Icon aria-hidden />
+                    <span className="modal__typeText">
+                      <b>{t}</b>
+                      <em>{TYPE_HINTS[t]}</em>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
           <div className="modal__buy">
             <div className="modal__qty">
@@ -103,15 +145,20 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
             </div>
           </div>
 
-          <button className="btn btn--red modal__add" onClick={addToCart}>
-            <FaShoppingBag aria-hidden /> Add to Cart
-          </button>
+          <div className="modal__actions">
+            <button type="button" className="btn modal__btn modal__btn--cart" onClick={addToCart}>
+              <FaShoppingBag aria-hidden /> Add to Cart
+            </button>
+            <button type="button" className="btn modal__btn modal__btn--now" onClick={orderThisNow}>
+              <FaBolt aria-hidden /> Order Now
+            </button>
+          </div>
 
           <div className="modal__foot">
             <a href={SITE.phoneHref}>
               <FaPhoneAlt aria-hidden /> Prefer to call? {SITE.phone}
             </a>
-            <span>Delivery charge ৳{DELIVERY_CHARGE}</span>
+            <span>{isDelivery(orderType) ? `Delivery charge ৳${DELIVERY_CHARGE}` : "No delivery charge"}</span>
           </div>
         </div>
       </div>

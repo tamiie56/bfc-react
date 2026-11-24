@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import type { OrderType } from "./order";
 
 export interface CartLine {
   key: string;
@@ -76,6 +77,12 @@ interface CartContextValue {
   openCart: () => void;
   closeCart: () => void;
   toast: string | null;
+  /** chosen in the dish popup, pre-selected at checkout */
+  orderType: OrderType;
+  setOrderType: (t: OrderType) => void;
+  /** "Order Now": a single item checked out on its own, the cart stays untouched */
+  direct: CartLine | null;
+  orderNow: (line: NewLine, qty?: number) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -83,6 +90,8 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, dispatch] = useReducer(reducer, [], load);
   const [isOpen, setOpen] = useState(false);
+  const [orderType, setOrderType] = useState<OrderType>("Online Delivery");
+  const [direct, setDirect] = useState<CartLine | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -115,6 +124,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [showToast]
   );
 
+  const orderNow = useCallback((line: NewLine, qty = 1) => {
+    setDirect({ ...line, qty: Math.min(Math.max(qty, 1), MAX_QTY) });
+    setOpen(true);
+  }, []);
+
   const value = useMemo<CartContextValue>(() => {
     const count = lines.reduce((n, l) => n + l.qty, 0);
     const subtotal = lines.reduce((n, l) => n + l.qty * l.price, 0);
@@ -128,11 +142,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       remove: (key) => dispatch({ type: "remove", key }),
       clear: () => dispatch({ type: "clear" }),
       isOpen,
-      openCart: () => setOpen(true),
-      closeCart: () => setOpen(false),
+      openCart: () => {
+        setDirect(null);
+        setOpen(true);
+      },
+      closeCart: () => {
+        setOpen(false);
+        setDirect(null);
+      },
       toast,
+      orderType,
+      setOrderType,
+      direct,
+      orderNow,
     };
-  }, [lines, add, isOpen, toast]);
+  }, [lines, add, isOpen, toast, orderType, direct, orderNow]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
