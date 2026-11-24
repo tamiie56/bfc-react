@@ -16,6 +16,10 @@ export function newOrderId(): string {
   return "BFC-" + Date.now().toString(36).toUpperCase().slice(-6);
 }
 
+export function newBookingId(): string {
+  return "TBL-" + Date.now().toString(36).toUpperCase().slice(-6);
+}
+
 export function itemsText(lines: CartLine[]): string {
   return lines
     .map(
@@ -31,17 +35,17 @@ export function itemsText(lines: CartLine[]): string {
  *   so it shows up in Site -> Forms and can be e-mailed to the restaurant.
  * - In `npm run dev` there is no Netlify, so the order is simulated.
  */
-export async function submitOrder(payload: Record<string, string>): Promise<void> {
+export async function submitOrder(payload: Record<string, string>, formName = "order"): Promise<void> {
   if (import.meta.env.DEV) {
     await new Promise((resolve) => setTimeout(resolve, 800));
-    console.info("[BFC demo order - not sent, dev mode]", payload);
+    console.info(`[BFC demo ${formName} - not sent, dev mode]`, payload);
     return;
   }
 
   const res = await fetch("/", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ "form-name": "order", ...payload }).toString(),
+    body: new URLSearchParams({ "form-name": formName, ...payload }).toString(),
   });
   if (!res.ok) throw new Error(`Order request failed (${res.status})`);
 }

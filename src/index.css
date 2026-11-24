@@ -539,6 +539,15 @@ button {
   transition: all 0.25s var(--ease);
 }
 
+.has-dropdown > a svg {
+  transition: transform 0.3s var(--ease);
+}
+
+.has-dropdown:hover > a svg,
+.has-dropdown:focus-within > a svg {
+  transform: rotate(180deg);
+}
+
 .has-dropdown:hover .dropdown,
 .has-dropdown:focus-within .dropdown {
   opacity: 1;
@@ -1861,6 +1870,11 @@ button {
     margin: 1rem 0 0;
   }
 
+  .has-dropdown:hover > a svg,
+  .has-dropdown:focus-within > a svg {
+    transform: none;
+  }
+
   .dropdown {
     position: static;
     padding: 0 0 0 1rem;
@@ -2811,6 +2825,103 @@ button {
   color: var(--yellow);
 }
 
+/* dine-in: table booking */
+.modal__dine {
+  margin-top: 1.2rem;
+  padding: 1.1rem;
+  border: 1px solid rgba(255, 200, 10, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 200, 10, 0.06);
+}
+
+.modal__dine p {
+  margin-bottom: 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.modal__dine .modal__btn {
+  width: 100%;
+}
+
+.book {
+  margin-top: 1.2rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.book__head h3 {
+  font-family: var(--font-head);
+  font-size: 1.35rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.book__head p {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.book__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.book--done {
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+
+.book__tick {
+  font-size: 2.6rem;
+  color: var(--yellow);
+}
+
+.book--done h3 {
+  font-family: var(--font-head);
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.book--done p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.book__summary {
+  width: 100%;
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.book__summary li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.book__summary li + li {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.book__summary strong {
+  color: #fff;
+}
+
 /* ---------- quantity stepper ---------- */
 .qty {
   display: inline-flex;
@@ -3268,6 +3379,27 @@ button {
 .field select:focus,
 .field textarea:focus {
   border-color: var(--yellow);
+}
+
+/* custom select arrow, kept clear of the border */
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 3rem;
+  background: #241915
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23ffc80a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E")
+    no-repeat right 1.1rem center / 14px;
+  cursor: pointer;
+}
+
+.field select option {
+  background: #241915;
+  color: #fff;
+}
+
+.field input[type="date"],
+.field input[type="time"] {
+  color-scheme: dark;
 }
 
 .field input::placeholder,

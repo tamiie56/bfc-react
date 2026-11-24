@@ -42,6 +42,21 @@
       <input name="hasFromItems" />
       <input name="placedAt" />
     </form>
+    <!-- Netlify Forms: table booking form (Dine-in) -->
+    <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="booking" />
+      <input name="bot-field" />
+      <input name="bookingId" />
+      <input name="name" />
+      <input name="phone" />
+      <input name="area" />
+      <input name="date" />
+      <input name="time" />
+      <input name="guests" />
+      <input name="dish" />
+      <textarea name="note"></textarea>
+      <input name="placedAt" />
+    </form>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

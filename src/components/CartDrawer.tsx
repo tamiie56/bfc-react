@@ -344,7 +344,7 @@ export default function CartDrawer() {
                     onClick={() => (direct ? closeCart() : setStep("cart"))}
                     disabled={busy}
                   >
-                    {direct ? "← Cancel" : "← Back to cart"}
+                    {direct ? "Cancel" : "Back to cart"}
                   </button>
                 </footer>
               </form>

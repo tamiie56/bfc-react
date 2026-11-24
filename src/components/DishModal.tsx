@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FaBolt, FaBoxOpen, FaMobileAlt, FaMotorcycle, FaPhoneAlt, FaShoppingBag, FaTimes, FaUtensils } from "react-icons/fa";
+import { FaBolt, FaBoxOpen, FaCalendarCheck, FaMobileAlt, FaMotorcycle, FaPhoneAlt, FaShoppingBag, FaTimes, FaUtensils } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import { useCart } from "../cart/CartContext";
 import { ORDER_TYPES, isDelivery } from "../cart/order";
@@ -7,6 +7,7 @@ import type { OrderType } from "../cart/order";
 import { SITE } from "../data/content";
 import { DELIVERY_CHARGE, PLACEHOLDER, dishImage } from "../data/menu";
 import type { Dish } from "../data/menu";
+import BookingForm from "./BookingForm";
 import QtyStepper from "./QtyStepper";
 
 interface Props {
@@ -27,7 +28,7 @@ const TYPE_HINTS: Record<OrderType, string> = {
   "Online Order": "Order now, we confirm by call",
   "Online Delivery": "Delivered to your door",
   "Take Away": "Pick up at the outlet",
-  "Dine-in": "Eat at the outlet",
+  "Dine-in": "Book a table at the outlet",
 };
 
 export default function DishModal({ dish, categoryId, categoryTitle, onClose }: Props) {
@@ -35,6 +36,7 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
   const closeRef = useRef<HTMLButtonElement>(null);
   const [step, setStep] = useState(0);
   const [qty, setQty] = useState(1);
+  const [booking, setBooking] = useState(false);
 
   // bigger photo first, then the original; if neither loads (or there is none) show the logo
   const photo = dishImage(dish);
@@ -108,6 +110,11 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
 
           {dish.desc && <p className="modal__desc">{dish.desc}</p>}
 
+          {booking ? (
+            <BookingForm dishName={dish.name} onBack={() => setBooking(false)} onClose={onClose} />
+          ) : (
+            <>
+
           <fieldset className="modal__types">
             <legend>How would you like to order?</legend>
             <div className="modal__typeGrid">
@@ -134,6 +141,15 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
             </div>
           </fieldset>
 
+          {orderType === "Dine-in" ? (
+            <div className="modal__dine">
+              <p>Dining in? Reserve a table and we will have it ready for you.</p>
+              <button type="button" className="btn modal__btn modal__btn--now" onClick={() => setBooking(true)}>
+                <FaCalendarCheck aria-hidden /> Book a Table
+              </button>
+            </div>
+          ) : (
+            <>
           <div className="modal__buy">
             <div className="modal__qty">
               <span>Quantity</span>
@@ -154,12 +170,19 @@ export default function DishModal({ dish, categoryId, categoryTitle, onClose }: 
             </button>
           </div>
 
+            </>
+          )}
+
           <div className="modal__foot">
             <a href={SITE.phoneHref}>
               <FaPhoneAlt aria-hidden /> Prefer to call? {SITE.phone}
             </a>
-            <span>{isDelivery(orderType) ? `Delivery charge ৳${DELIVERY_CHARGE}` : "No delivery charge"}</span>
+            {orderType !== "Dine-in" && (
+              <span>{isDelivery(orderType) ? `Delivery charge ৳${DELIVERY_CHARGE}` : "No delivery charge"}</span>
+            )}
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>
