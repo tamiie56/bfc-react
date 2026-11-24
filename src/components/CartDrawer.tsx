@@ -4,10 +4,12 @@ import { FaCheckCircle, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "r
 import { Link } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
 import type { CartLine } from "../cart/CartContext";
-import { ORDER_TYPES, isDelivery, itemsText, newOrderId, submitOrder, validPhone } from "../cart/order";
+import { ORDER_TYPES, isDelivery, itemsText, newBookingId, newOrderId, submitOrder, validPhone } from "../cart/order";
 import type { OrderType } from "../cart/order";
 import { AREAS, SITE } from "../data/content";
 import { DELIVERY_CHARGE } from "../data/menu";
+import { BookingFields, prettyDate, todayInput, validateBooking } from "./BookingForm";
+import type { Booking } from "./BookingForm";
 import QtyStepper from "./QtyStepper";
 
 type Step = "cart" | "checkout" | "done";
@@ -24,6 +26,7 @@ interface Done {
   fee: number;
   total: number;
   hasFrom: boolean;
+  booking: Booking | null;
 }
 
 const CUSTOMER_KEY = "bfc-customer-v1";
@@ -58,12 +61,14 @@ export default function CartDrawer() {
   const wasDirect = useRef(false);
   const [step, setStep] = useState<Step>("cart");
   const [customer, setCustomer] = useState(loadCustomer);
+  const [booking, setBooking] = useState<Booking>(() => ({ date: todayInput(), time: "", guests: 2 }));
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
 
+  const dine = type === "Dine-in";
   const fee = isDelivery(type) ? DELIVERY_CHARGE : 0;
   const total = subtotal + fee;
 
@@ -113,6 +118,7 @@ export default function CartDrawer() {
     if (customer.name.trim().length < 2) e.name = "Please enter your name";
     if (!validPhone(customer.phone)) e.phone = "Enter a valid mobile number (e.g. 01XXXXXXXXX)";
     if (isDelivery(type) && customer.address.trim().length < 8) e.address = "Please enter your full delivery address";
+    if (dine) Object.assign(e, validateBooking(booking));
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -121,28 +127,45 @@ export default function CartDrawer() {
     ev.preventDefault();
     if (busy || !validate()) return;
 
-    const id = newOrderId();
-    const payload: Record<string, string> = {
-      "bot-field": "",
-      orderId: id,
-      orderType: type,
-      name: customer.name.trim(),
-      phone: customer.phone.trim(),
-      area: customer.area,
-      address: isDelivery(type) ? customer.address.trim() : "",
-      note: note.trim(),
-      items: itemsText(lines),
-      subtotal: String(subtotal),
-      delivery: String(fee),
-      total: String(total),
-      hasFromItems: hasFrom ? "yes" : "no",
-      placedAt: new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" }),
-    };
+    const id = dine ? newBookingId() : newOrderId();
+    const placedAt = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+    const payload: Record<string, string> = dine
+      ? {
+          "bot-field": "",
+          bookingId: id,
+          name: customer.name.trim(),
+          phone: customer.phone.trim(),
+          area: customer.area,
+          date: booking.date,
+          time: booking.time,
+          guests: String(booking.guests),
+          note: note.trim(),
+          items: itemsText(lines),
+          subtotal: String(subtotal),
+          hasFromItems: hasFrom ? "yes" : "no",
+          placedAt,
+        }
+      : {
+          "bot-field": "",
+          orderId: id,
+          orderType: type,
+          name: customer.name.trim(),
+          phone: customer.phone.trim(),
+          area: customer.area,
+          address: isDelivery(type) ? customer.address.trim() : "",
+          note: note.trim(),
+          items: itemsText(lines),
+          subtotal: String(subtotal),
+          delivery: String(fee),
+          total: String(total),
+          hasFromItems: hasFrom ? "yes" : "no",
+          placedAt,
+        };
 
     setBusy(true);
     setFailed(false);
     try {
-      await submitOrder(payload);
+      await submitOrder(payload, dine ? "booking" : "order");
       try {
         localStorage.setItem(
           CUSTOMER_KEY,
@@ -163,9 +186,11 @@ export default function CartDrawer() {
         fee,
         total,
         hasFrom,
+        booking: dine ? booking : null,
       });
       if (!direct) clear();
       setNote("");
+      if (dine) setBooking((b) => ({ ...b, time: "" }));
       setStep("done");
     } catch {
       setFailed(true);
@@ -188,8 +213,8 @@ export default function CartDrawer() {
             <header className="drawer__head">
               <h2>
                 {step === "cart" && "Your Order"}
-                {step === "checkout" && "Checkout"}
-                {step === "done" && "Order Placed"}
+                {step === "checkout" && (dine ? "Book a Table" : "Checkout")}
+                {step === "done" && (done?.booking ? "Booking Received" : "Order Placed")}
               </h2>
               <button className="drawer__close" onClick={closeCart} aria-label="Close cart">
                 <FaTimes />
@@ -283,7 +308,7 @@ export default function CartDrawer() {
                   </label>
 
                   <label className="field">
-                    <span>{isDelivery(type) ? "Nearest outlet area" : "Outlet area"}</span>
+                    <span>{isDelivery(type) ? "Nearest outlet area" : dine ? "Outlet" : "Outlet area"}</span>
                     <select value={customer.area} onChange={(e) => set("area", e.target.value)}>
                       {AREAS.map((a) => (
                         <option key={a} value={a}>
@@ -292,6 +317,17 @@ export default function CartDrawer() {
                       ))}
                     </select>
                   </label>
+
+                  {dine && (
+                    <BookingFields
+                      value={booking}
+                      onChange={(b) => {
+                        setBooking(b);
+                        setErrors((e) => ({ ...e, date: "", time: "" }));
+                      }}
+                      errors={errors}
+                    />
+                  )}
 
                   {isDelivery(type) && (
                     <label className="field">
@@ -313,15 +349,32 @@ export default function CartDrawer() {
                       rows={2}
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="Spicy level, extra dip, size, etc."
+                      placeholder={dine ? "Birthday, high chair, window seat, etc." : "Spicy level, extra dip, size, etc."}
                     />
                   </label>
 
+                  {dine && (
+                    <ul className="book__items">
+                      {lines.map((l) => (
+                        <li key={l.key}>
+                          <span>
+                            {l.qty} × {l.name}
+                          </span>
+                          <strong>৳{l.qty * l.price}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
                   <div className="drawer__summary">
-                    <div className="sum"><span>Subtotal</span><strong>৳{subtotal}</strong></div>
-                    <div className="sum"><span>Delivery charge</span><strong>{fee ? `৳${fee}` : "—"}</strong></div>
-                    <div className="sum sum--total"><span>Total</span><strong>৳{total}</strong></div>
-                    <p className="drawer__hint">Payment: cash on {isDelivery(type) ? "delivery" : type === "Dine-in" ? "payment at the outlet" : "pickup / at the outlet"}.</p>
+                    <div className="sum"><span>{dine ? "Pre-order total" : "Subtotal"}</span><strong>৳{subtotal}</strong></div>
+                    {!dine && <div className="sum"><span>Delivery charge</span><strong>{fee ? `৳${fee}` : "—"}</strong></div>}
+                    {!dine && <div className="sum sum--total"><span>Total</span><strong>৳{total}</strong></div>}
+                    <p className="drawer__hint">
+                      {dine
+                        ? "Pay at the outlet. We will prepare your pre-ordered items for your visit."
+                        : `Payment: cash on ${isDelivery(type) ? "delivery" : "pickup / at the outlet"}.`}
+                    </p>
                     {hasFrom && (
                       <p className="drawer__hint">&ldquo;From&rdquo; prices are confirmed on the confirmation call.</p>
                     )}
@@ -336,7 +389,7 @@ export default function CartDrawer() {
 
                 <footer className="drawer__foot">
                   <button type="submit" className="btn btn--red drawer__btn" disabled={busy}>
-                    {busy ? "Placing order…" : `Place Order · ৳${total}`}
+                    {busy ? (dine ? "Booking…" : "Placing order…") : dine ? "Book Table" : `Place Order · ৳${total}`}
                   </button>
                   <button
                     type="button"
@@ -356,14 +409,20 @@ export default function CartDrawer() {
                 <FaCheckCircle className="drawer__tick" aria-hidden />
                 <h3>Thank you, {done.name}!</h3>
                 <p>
-                  Your order <strong>{done.id}</strong> has been received. We will call you on{" "}
-                  <strong>{done.phone}</strong> to confirm.
+                  Your {done.booking ? "table booking" : "order"} <strong>{done.id}</strong> has been received. We
+                  will call you on <strong>{done.phone}</strong> to confirm.
                 </p>
 
                 <div className="done__box">
                   <div className="done__meta">
-                    <span>{done.type}</span>
-                    <span>{isDelivery(done.type) ? done.address : done.area}</span>
+                    <span>{done.booking ? `Table · ${done.area}` : done.type}</span>
+                    <span>
+                      {done.booking
+                        ? `${prettyDate(done.booking.date)} · ${done.booking.time} · ${done.booking.guests} ${done.booking.guests === 1 ? "guest" : "guests"}`
+                        : isDelivery(done.type)
+                          ? done.address
+                          : done.area}
+                    </span>
                   </div>
                   <ul>
                     {done.lines.map((l) => (
@@ -375,9 +434,9 @@ export default function CartDrawer() {
                       </li>
                     ))}
                   </ul>
-                  <div className="sum"><span>Subtotal</span><strong>৳{done.subtotal}</strong></div>
+                  <div className="sum"><span>{done.booking ? "Pre-order total" : "Subtotal"}</span><strong>৳{done.subtotal}</strong></div>
                   {done.fee > 0 && <div className="sum"><span>Delivery charge</span><strong>৳{done.fee}</strong></div>}
-                  <div className="sum sum--total"><span>Total</span><strong>৳{done.total}</strong></div>
+                  {!done.booking && <div className="sum sum--total"><span>Total</span><strong>৳{done.total}</strong></div>}
                   {done.hasFrom && <p className="drawer__hint">&ldquo;From&rdquo; prices will be confirmed on the call.</p>}
                 </div>
 
