@@ -1,0 +1,26 @@
+/* Items the team marked "sold out" in the admin panel */
+.dish.is-soldout .dish__thumb img {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.dish.is-soldout h3 {
+  color: var(--muted);
+}
+
+.dish.is-soldout .dish__link {
+  cursor: not-allowed;
+}
+
+.dish__sold {
+  color: var(--red);
+  font-family: var(--font-head);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dish.is-soldout .dish__link:hover .dish__thumb img {
+  transform: none;
+}

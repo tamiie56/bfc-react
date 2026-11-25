@@ -13,6 +13,8 @@ export interface Dish {
   from?: boolean;
   desc?: string;
   image?: string;
+  /** set from the admin panel: shown on the menu but can't be ordered */
+  soldOut?: boolean;
 }
 
 export interface MenuCategory {

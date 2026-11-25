@@ -1,5 +1,5 @@
 import { AREAS, FOUNDED, HOURS, OUTLET_COUNT, SERVICES, SITE } from "../data/content";
-import { DELIVERY_CHARGE, MENU } from "../data/menu";
+import { getLiveMenu, getSettings } from "../admin/store";
 import { dhakaHour } from "../hooks/useOpenStatus";
 import { ruleReply } from "./rules";
 import type { BotData, BotReply } from "./rules";
@@ -23,7 +23,7 @@ export interface ChatTurn {
 function siteData(): BotData {
   const h = dhakaHour();
   return {
-    menu: MENU,
+    menu: getLiveMenu(),
     phone: SITE.phone,
     phoneHref: SITE.phoneHref,
     email: SITE.email,
@@ -33,7 +33,7 @@ function siteData(): BotData {
     areas: AREAS,
     outletCount: OUTLET_COUNT,
     founded: FOUNDED,
-    deliveryCharge: DELIVERY_CHARGE,
+    deliveryCharge: getSettings().deliveryCharge,
     services: SERVICES,
     isOpen: h >= HOURS.open && h < HOURS.close,
   };

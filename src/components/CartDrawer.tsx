@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { FaCheckCircle, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { recordBooking, recordOrder, useSettings } from "../admin/store";
 import { useCart } from "../cart/CartContext";
 import type { CartLine } from "../cart/CartContext";
 import { ORDER_TYPES, isDelivery, itemsText, newBookingId, newOrderId, submitOrder, validPhone } from "../cart/order";
 import type { OrderType } from "../cart/order";
 import { AREAS, SITE } from "../data/content";
-import { DELIVERY_CHARGE } from "../data/menu";
 import { BookingFields, prettyDate, todayInput, validateBooking } from "./BookingForm";
 import type { Booking } from "./BookingForm";
 import QtyStepper from "./QtyStepper";
@@ -51,6 +51,7 @@ function loadCustomer() {
 
 export default function CartDrawer() {
   const cart = useCart();
+  const { deliveryCharge } = useSettings();
   const { setQty, remove, clear, isOpen, closeCart, toast, orderType: type, setOrderType: setType, direct } = cart;
 
   // "Order Now" checks out just that one item; otherwise the whole cart
@@ -69,7 +70,7 @@ export default function CartDrawer() {
   const [done, setDone] = useState<Done | null>(null);
 
   const dine = type === "Dine-in";
-  const fee = isDelivery(type) ? DELIVERY_CHARGE : 0;
+  const fee = isDelivery(type) ? deliveryCharge : 0;
   const total = subtotal + fee;
 
   // lock page scroll + Esc to close while open
@@ -166,6 +167,39 @@ export default function CartDrawer() {
     setFailed(false);
     try {
       await submitOrder(payload, dine ? "booking" : "order");
+
+      // also keep a copy for the team panel (/admin)
+      const saved = lines.map((l) => ({ name: l.name, category: l.category, price: l.price, qty: l.qty, from: l.from }));
+      if (dine) {
+        recordBooking({
+          id,
+          name: customer.name.trim(),
+          phone: customer.phone.trim(),
+          area: customer.area,
+          date: booking.date,
+          time: booking.time,
+          guests: booking.guests,
+          note: note.trim(),
+          lines: saved,
+          subtotal,
+          hasFrom,
+        });
+      } else {
+        recordOrder({
+          id,
+          type,
+          name: customer.name.trim(),
+          phone: customer.phone.trim(),
+          area: customer.area,
+          address: isDelivery(type) ? customer.address.trim() : "",
+          note: note.trim(),
+          lines: saved,
+          subtotal,
+          fee,
+          total,
+          hasFrom,
+        });
+      }
       try {
         localStorage.setItem(
           CUSTOMER_KEY,
@@ -260,7 +294,7 @@ export default function CartDrawer() {
                         <span>Subtotal</span>
                         <strong>৳{subtotal}</strong>
                       </div>
-                      <p className="drawer__hint">Delivery charge (৳{DELIVERY_CHARGE}) is added at checkout for home delivery.</p>
+                      <p className="drawer__hint">Delivery charge (৳{deliveryCharge}) is added at checkout for home delivery.</p>
                       {hasFrom && (
                         <p className="drawer__hint">
                           Items marked &ldquo;From&rdquo; start at that price. We confirm the final price when we call you.
