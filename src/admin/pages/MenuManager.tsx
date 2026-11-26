@@ -112,7 +112,7 @@ function ItemEditor({ target, cats, onClose }: { target: Target; cats: LiveCateg
   const toast = useToast();
   const { dish } = target;
   const builtIn = dish !== null && !dish.custom;
-  const originalImage = builtIn ? MENU.find((c) => c.id === target.cat.id)?.items.find((d) => d.name === dish.name)?.image : undefined;
+  const originalImage = builtIn ? MENU.find((c) => c.id === dish.origCat)?.items.find((d) => d.name === dish.origName)?.image : undefined;
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState<Form>({
@@ -148,11 +148,12 @@ function ItemEditor({ target, cats, onClose }: { target: Target; cats: LiveCateg
     if (!name) return setError("Item name is required");
     if (!Number.isFinite(price) || price <= 0) return setError("Enter a price greater than 0");
 
+    const isSelf = (d: LiveDish) =>
+      dish !== null && ((Boolean(dish.customId) && d.customId === dish.customId) || (Boolean(dish.origName) && d.origName === dish.origName && d.origCat === dish.origCat));
+    const clash = cats.find((c) => c.id === form.categoryId)?.items.some((d) => !isSelf(d) && d.name.toLowerCase() === name.toLowerCase());
+    if (clash) return setError("This category already has an item with that name");
+
     if (dish === null) {
-      const cat = cats.find((c) => c.id === form.categoryId);
-      if (cat?.items.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
-        return setError("This category already has an item with that name");
-      }
       saveCustomItem({
         categoryId: form.categoryId,
         name,
@@ -167,6 +168,7 @@ function ItemEditor({ target, cats, onClose }: { target: Target; cats: LiveCateg
     } else if (dish.custom && dish.customId) {
       patchCustomItem(dish.customId, {
         name,
+        categoryId: form.categoryId,
         price,
         from: form.from || undefined,
         desc: form.desc.trim() || undefined,
@@ -176,7 +178,9 @@ function ItemEditor({ target, cats, onClose }: { target: Target; cats: LiveCateg
       });
       toast(`${name} updated`);
     } else {
-      patchOverride(target.cat.id, dish.name, {
+      patchOverride(dish.origCat ?? target.cat.id, dish.origName ?? dish.name, {
+        name,
+        categoryId: form.categoryId,
         price,
         from: form.from,
         desc: form.desc.trim(),
@@ -210,23 +214,18 @@ function ItemEditor({ target, cats, onClose }: { target: Target; cats: LiveCateg
       <div className="adm-form">
         <label className="adm-field">
           <span>Category</span>
-          {dish === null ? (
-            <select className="adm-select" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-              {cats.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input className="adm-input" value={target.cat.title} disabled />
-          )}
+          <select className="adm-select adm-select--full" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
+            {cats.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="adm-field">
           <span>Item name</span>
-          <input className="adm-input" value={form.name} disabled={builtIn} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Spicy Wrap" />
-          {builtIn && <small className="adm-muted">Original menu items keep their name. Hide this one and add a new item if you need a different name.</small>}
+          <input className="adm-input" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Spicy Wrap" />
         </label>
 
         <div className="adm-form__row">
@@ -330,12 +329,12 @@ export default function MenuManager() {
 
   const toggle = (c: LiveCategory, d: LiveDish, patch: { soldOut?: boolean; hidden?: boolean }) => {
     if (d.custom && d.customId) patchCustomItem(d.customId, patch);
-    else patchOverride(c.id, d.name, patch);
+    else patchOverride(d.origCat ?? c.id, d.origName ?? d.name, patch);
   };
 
   const setPrice = (c: LiveCategory, d: LiveDish, price: number) => {
     if (d.custom && d.customId) patchCustomItem(d.customId, { price });
-    else patchOverride(c.id, d.name, { price });
+    else patchOverride(d.origCat ?? c.id, d.origName ?? d.name, { price });
     toast(`${d.name} is now ${money(price)}`);
   };
 
@@ -446,7 +445,7 @@ export default function MenuManager() {
             ) : (
               <ul className="adm-items">
                 {c.shown.map((d) => (
-                  <li key={d.customId ?? d.name} className={`adm-item ${d.hidden ? "is-hidden" : ""} ${d.soldOut ? "is-soldout" : ""}`}>
+                  <li key={d.customId ?? `${d.origCat}::${d.origName}`} className={`adm-item ${d.hidden ? "is-hidden" : ""} ${d.soldOut ? "is-soldout" : ""}`}>
                     <Thumb dish={d} />
                     <div className="adm-item__info">
                       <h4>
@@ -487,7 +486,7 @@ export default function MenuManager() {
                           <button
                             className="adm-icon-btn"
                             onClick={() => {
-                              resetOverride(c.id, d.name);
+                              resetOverride(d.origCat ?? c.id, d.origName ?? d.name);
                               toast(`${d.name} restored to the original`);
                             }}
                             aria-label={`Reset ${d.name} to original`}

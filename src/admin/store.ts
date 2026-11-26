@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { DELIVERY_CHARGE, MENU } from "../data/menu";
+import { DELIVERY_CHARGE, MENU, dishImage } from "../data/menu";
 import type { Dish, MenuCategory } from "../data/menu";
 import type { OrderType } from "../cart/order";
 import { SbError, hasSession, isRemote, sb } from "./supabase";
@@ -62,6 +62,10 @@ export interface AdminBooking {
 }
 
 export interface ItemOverride {
+  /** rename an original menu item */
+  name?: string;
+  /** move an original menu item to another category */
+  categoryId?: string;
   price?: number;
   from?: boolean;
   desc?: string;
@@ -511,6 +515,9 @@ export interface LiveDish extends Dish {
   customId?: string;
   edited?: boolean;
   hidden?: boolean;
+  /** original identity of a built-in item (stays the same after a rename / move) */
+  origCat?: string;
+  origName?: string;
 }
 
 export interface LiveCategory extends Omit<MenuCategory, "items"> {
@@ -520,30 +527,53 @@ export interface LiveCategory extends Omit<MenuCategory, "items"> {
 
 /** Built-in menu + admin edits. `includeHidden` is for the admin screen; the customer site never sees hidden items. */
 export function buildMenu(state: MenuState, includeHidden = false): LiveCategory[] {
+  const moved: { to: string; dish: LiveDish }[] = [];
+
   const cats: LiveCategory[] = [
     ...MENU.map<LiveCategory>((c) => ({
       id: c.id,
       title: c.title,
-      items: c.items.map<LiveDish>((d) => {
-        const o = state.overrides[itemKey(c.id, d.name)];
-        if (!o) return { ...d };
-        return {
-          ...d,
-          price: o.price ?? d.price,
-          from: o.from ?? d.from,
-          desc: o.desc ?? d.desc,
-          image: o.image || d.image,
-          soldOut: o.soldOut,
-          hidden: o.hidden,
-          edited: o.price !== undefined || o.from !== undefined || o.desc !== undefined || o.image !== undefined,
-        };
-      }),
+      items: [],
     })),
     ...state.customCategories.map<LiveCategory>((c) => ({ id: c.id, title: c.title, items: [], custom: true })),
   ];
+  const byId = new Map(cats.map((c) => [c.id, c]));
+
+  for (const c of MENU) {
+    for (const d of c.items) {
+      const o = state.overrides[itemKey(c.id, d.name)];
+      const name = o?.name || d.name;
+      const dish: LiveDish = {
+        ...d,
+        name,
+        // a renamed item would lose its bundled photo (matched by name), so resolve it first
+        image: o?.image || (name !== d.name ? dishImage(d) : d.image),
+        origCat: c.id,
+        origName: d.name,
+      };
+      if (o) {
+        dish.price = o.price ?? d.price;
+        dish.from = o.from ?? d.from;
+        dish.desc = o.desc ?? d.desc;
+        dish.soldOut = o.soldOut;
+        dish.hidden = o.hidden;
+        dish.edited =
+          o.price !== undefined ||
+          o.from !== undefined ||
+          o.desc !== undefined ||
+          o.image !== undefined ||
+          o.name !== undefined ||
+          o.categoryId !== undefined;
+      }
+      const target = o?.categoryId && o.categoryId !== c.id && byId.has(o.categoryId) ? o.categoryId : c.id;
+      if (target === c.id) byId.get(c.id)!.items.push(dish);
+      else moved.push({ to: target, dish });
+    }
+  }
+  for (const m of moved) byId.get(m.to)!.items.push(m.dish);
 
   for (const ci of state.customItems) {
-    const cat = cats.find((c) => c.id === ci.categoryId);
+    const cat = byId.get(ci.categoryId);
     if (!cat) continue;
     cat.items.push({
       name: ci.name,
@@ -591,6 +621,8 @@ export function patchOverride(categoryId: string, name: string, patch: ItemOverr
 
   // keep only what really differs from the built-in menu, so "edited" stays meaningful
   const clean: ItemOverride = {};
+  if (merged.name && merged.name !== name) clean.name = merged.name;
+  if (merged.categoryId && merged.categoryId !== categoryId) clean.categoryId = merged.categoryId;
   if (merged.price !== undefined && merged.price !== original?.price) clean.price = merged.price;
   if (merged.from !== undefined && Boolean(merged.from) !== Boolean(original?.from)) clean.from = merged.from;
   if (merged.desc !== undefined && merged.desc !== (original?.desc ?? "")) clean.desc = merged.desc;

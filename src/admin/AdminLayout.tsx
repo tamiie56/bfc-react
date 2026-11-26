@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   FaBars,
+  FaBell,
   FaCalendarCheck,
   FaChartLine,
   FaClipboardList,
@@ -9,15 +10,16 @@ import {
   FaSignOutAlt,
   FaUsers,
   FaUtensils,
-  FaVolumeMute,
-  FaVolumeUp,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
+import type { Notice } from "./notifications";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { logout } from "./auth";
+import { ago, fmtClock, fmtDay, money } from "./format";
+import { addNotices, clearNotices, markAllRead, markRead, useNotices } from "./notifications";
 import { onStoreError, updateSettings, useBookings, useOrders, useOrdersReady, useSettings } from "./store";
-import { ToastProvider, useToast } from "./ui";
+import { Switch, ToastProvider, useToast } from "./ui";
 
 const NAV: { to: string; label: string; icon: IconType; end?: boolean; badge?: "orders" | "bookings" }[] = [
   { to: "/admin", label: "Dashboard", icon: FaChartLine, end: true },
@@ -62,7 +64,7 @@ function beep() {
   }
 }
 
-/** Watches for orders / bookings that arrive while the panel is open. */
+/** Watches for orders / bookings: fills the bell and alerts when something arrives while the panel is open. */
 function useArrivalAlerts() {
   const orders = useOrders();
   const bookings = useBookings();
@@ -75,27 +77,140 @@ function useArrivalAlerts() {
 
   useEffect(() => {
     if (!ready) return; // wait for the first load, otherwise every old order would look "new"
+
+    const orderNotice = (o: (typeof orders)[number]): Notice => ({
+      id: o.id,
+      kind: "order",
+      title: `New order ${o.id} - ${o.name}`,
+      sub: `${o.type} - ${money(o.total)}`,
+      at: o.placedAt,
+      read: false,
+    });
+    const bookingNotice = (b: (typeof bookings)[number]): Notice => ({
+      id: b.id,
+      kind: "booking",
+      title: `New table booking ${b.id} - ${b.name}`,
+      sub: `${fmtDay(b.date)}, ${fmtClock(b.time)} - ${b.guests} guests`,
+      at: b.placedAt,
+      read: false,
+    });
+
     const ids = [...orders.map((o) => o.id), ...bookings.map((b) => b.id)];
     if (!seen.current) {
+      // first load: whatever is still waiting for the team shows up in the bell
       seen.current = new Set(ids);
+      addNotices([...orders.filter((o) => o.status === "new").map(orderNotice), ...bookings.filter((b) => b.status === "pending").map(bookingNotice)]);
       return;
     }
-    const fresh = [
-      ...orders.filter((o) => !seen.current!.has(o.id)).map((o) => `New order ${o.id} - ${o.name}`),
-      ...bookings.filter((b) => !seen.current!.has(b.id)).map((b) => `New table booking ${b.id} - ${b.name}`),
-    ];
+
+    const freshOrders = orders.filter((o) => !seen.current!.has(o.id));
+    const freshBookings = bookings.filter((b) => !seen.current!.has(b.id));
     ids.forEach((id) => seen.current!.add(id));
-    if (fresh.length) {
-      fresh.slice(0, 2).forEach((t) => toast(t));
-      if (sound) beep();
-    }
+    if (freshOrders.length + freshBookings.length === 0) return;
+
+    const notices = [...freshOrders.map(orderNotice), ...freshBookings.map(bookingNotice)];
+    addNotices(notices);
+    notices.slice(0, 2).forEach((n) => toast(n.title));
+    if (sound) beep();
   }, [orders, bookings, ready, sound, toast]);
+}
+
+function Bell() {
+  const notices = useNotices();
+  const { sound } = useSettings();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const unread = notices.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onDown = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [open]);
+
+  const go = (n: Notice) => {
+    markRead(n.id);
+    setOpen(false);
+    navigate(`/admin/${n.kind === "order" ? "orders" : "bookings"}?open=${encodeURIComponent(n.id)}`);
+  };
+
+  return (
+    <div className="adm-bell" ref={box}>
+      <button
+        className={`adm-icon-btn ${unread ? "has-unread" : ""}`}
+        onClick={() => setOpen((o) => !o)}
+        aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        <FaBell />
+        {unread > 0 && <b className="adm-bell__count">{unread > 9 ? "9+" : unread}</b>}
+      </button>
+
+      {open && (
+        <>
+          <div className="adm-bell__panel" role="dialog" aria-label="Notifications">
+            <header>
+              <h3>Notifications</h3>
+              <button className="adm-link" onClick={markAllRead} disabled={unread === 0}>
+                Mark all read
+              </button>
+            </header>
+
+            {notices.length === 0 ? (
+              <p className="adm-bell__empty">No notifications yet. New orders and table bookings will show up here.</p>
+            ) : (
+              <ul className="adm-bell__list">
+                {notices.map((n) => (
+                  <li key={n.id}>
+                    <button className={n.read ? "" : "is-unread"} onClick={() => go(n)}>
+                      <span className={`adm-bell__ico adm-bell__ico--${n.kind}`} aria-hidden>
+                        {n.kind === "order" ? <FaClipboardList /> : <FaCalendarCheck />}
+                      </span>
+                      <span className="adm-bell__text">
+                        <b>{n.title}</b>
+                        <small>{n.sub}</small>
+                        <small className="adm-bell__time">{ago(n.at)}</small>
+                      </span>
+                      {!n.read && <i className="adm-bell__dot" aria-label="Unread" />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <footer>
+              <label className="adm-bell__sound">
+                <span>New-order sound</span>
+                <Switch checked={sound} onChange={(v) => updateSettings({ sound: v })} label="New-order sound" />
+              </label>
+              {notices.length > 0 && (
+                <button className="adm-link" onClick={clearNotices}>
+                  Clear all
+                </button>
+              )}
+            </footer>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 function Shell() {
   const orders = useOrders();
   const bookings = useBookings();
-  const { sound } = useSettings();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -159,14 +274,7 @@ function Shell() {
           </button>
           <h2 className="adm-top__title">{title}</h2>
           <div className="adm-top__right">
-            <button
-              className="adm-icon-btn"
-              onClick={() => updateSettings({ sound: !sound })}
-              aria-label={sound ? "Mute new-order sound" : "Unmute new-order sound"}
-              title={sound ? "New-order sound: on" : "New-order sound: off"}
-            >
-              {sound ? <FaVolumeUp /> : <FaVolumeMute />}
-            </button>
+            <Bell />
             <span className="adm-avatar" title="Signed in as admin">
               A
             </span>
