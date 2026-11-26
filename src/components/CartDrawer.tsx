@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { FaCheckCircle, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "react-icons/fa";
+import { FaCheckCircle, FaDownload, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { recordBooking, recordOrder, useSettings } from "../admin/store";
 import { isRemote } from "../admin/supabase";
@@ -27,6 +27,8 @@ interface Done {
   fee: number;
   total: number;
   hasFrom: boolean;
+  note: string;
+  placedAtIso: string;
   booking: Booking | null;
 }
 
@@ -69,6 +71,8 @@ export default function CartDrawer() {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfFailed, setPdfFailed] = useState(false);
 
   const dine = type === "Dine-in";
   const fee = isDelivery(type) ? deliveryCharge : 0;
@@ -130,7 +134,8 @@ export default function CartDrawer() {
     if (busy || !validate()) return;
 
     const id = dine ? newBookingId() : newOrderId();
-    const placedAt = new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+    const placedAtIso = new Date().toISOString();
+    const placedAt = new Date(placedAtIso).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
     const payload: Record<string, string> = dine
       ? {
           "bot-field": "",
@@ -230,8 +235,11 @@ export default function CartDrawer() {
         fee,
         total,
         hasFrom,
+        note: note.trim(),
+        placedAtIso,
         booking: dine ? booking : null,
       });
+      setPdfFailed(false);
       if (!direct) clear();
       setNote("");
       if (dine) setBooking((b) => ({ ...b, time: "" }));
@@ -241,6 +249,37 @@ export default function CartDrawer() {
       setFailed(true);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const downloadReceipt = async () => {
+    if (!done || pdfBusy) return;
+    setPdfBusy(true);
+    setPdfFailed(false);
+    try {
+      const { downloadReceiptPdf } = await import("../cart/receiptPdf");
+      await downloadReceiptPdf({
+        id: done.id,
+        kind: done.booking ? "booking" : "order",
+        type: done.type,
+        name: done.name,
+        phone: done.phone,
+        area: done.area,
+        address: done.address,
+        note: done.note,
+        lines: done.lines.map((l) => ({ name: l.name, category: l.category, price: l.price, qty: l.qty, from: l.from })),
+        subtotal: done.subtotal,
+        fee: done.fee,
+        total: done.total,
+        hasFrom: done.hasFrom,
+        placedAt: done.placedAtIso,
+        booking: done.booking ? { date: done.booking.date, time: done.booking.time, guests: done.booking.guests } : null,
+      });
+    } catch (err) {
+      console.error("Receipt PDF failed", err);
+      setPdfFailed(true);
+    } finally {
+      setPdfBusy(false);
     }
   };
 
@@ -486,6 +525,9 @@ export default function CartDrawer() {
                 </div>
 
                 <div className="drawer__doneActions">
+                  <button type="button" className="btn btn--red btn--sm" onClick={downloadReceipt} disabled={pdfBusy}>
+                    <FaDownload aria-hidden /> {pdfBusy ? "Preparing PDF..." : "Download receipt (PDF)"}
+                  </button>
                   <a href={SITE.phoneHref} className="btn btn--ghost btn--sm">
                     <FaPhoneAlt aria-hidden /> {SITE.phone}
                   </a>
@@ -493,6 +535,7 @@ export default function CartDrawer() {
                     Back to Menu
                   </Link>
                 </div>
+                {pdfFailed && <p className="drawer__hint">Could not create the PDF on this device. Please take a screenshot of this screen instead.</p>}
               </div>
             )}
           </aside>
