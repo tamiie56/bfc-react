@@ -9,7 +9,35 @@ import crispy from "../assets/images/g-crispy.jpg";
 import sauce from "../assets/images/g-sauce.jpg";
 
 export const FOUNDED = 2002;
-export const OUTLET_COUNT = 22;
+/** All BFC outlets (the 21 branches on the online ordering page + Dhanmondi, Jamuna Future Park, Bashundhara City) */
+export const AREAS = [
+  "Dhanmondi",
+  "Mirpur 1",
+  "Mirpur 10",
+  "Mirpur 12",
+  "Khilgaon",
+  "Mohammadpur",
+  "Gulshan - 2",
+  "Banani",
+  "Keari Plaza",
+  "Orchid Plaza",
+  "Badda",
+  "Shyamoli",
+  "Satmasjid Road",
+  "Meher Plaza",
+  "Baily Road",
+  "Eskaton",
+  "Uttara Jashimuddin",
+  "Uttara Sector 13",
+  "Green Road",
+  "Motijheel",
+  "ECB Chattar",
+  "Savar",
+  "Jamuna Future Park",
+  "Bashundhara City",
+];
+
+export const OUTLET_COUNT = AREAS.length;
 
 /** Outlet opening hours (Saturday - Friday), 24h clock, Dhaka time */
 export const HOURS = { open: 10, close: 23 };
@@ -37,27 +65,11 @@ export const ABOUT = {
   image: aboutImg,
   paragraphs: [
     "To make chicken in a much more celebrated enjoyable and modern form, Best Fried Chicken (BFC) started its journey back in 2002. Under the guidance of Anisur Rahman Sinha, an Industrialist & chairman of Opex & Sinha Group, today BFC is Bangladesh's largest local fast-food chain. The birth of BFC is the manifestation of its founder's commitment to provide International Standard, high-quality & Hygienic food at a reasonable price to the fast-food appetite of the growing consumers in Dhaka city. The commitment to provide hygienic food in a decent clean environment is unwavering. The signature blend of spices with which the chicken is coated is unique in taste and aroma, manufactured carefully under the creative supervision of a master blender.",
-    "The food chain has gained immense popularity from the patrons and to serve its growing valued customers, it has opened 22 outlets in most of the key areas in Dhaka city including Dhanmondi, Gulshan, Banani, Badda, Uttara, Mirpur, BailyRoad, Khilgaon, Eskaton, Jamuna Future Park, Bashundhara City, Green Road and Motijheel.",
+    `The food chain has gained immense popularity from the patrons and to serve its growing valued customers, it has opened ${OUTLET_COUNT} outlets in most of the key areas in and around Dhaka city including Dhanmondi, Mirpur, Gulshan, Banani, Badda, Uttara, Mohammadpur, Shyamoli, Baily Road, Khilgaon, Eskaton, Jamuna Future Park, Bashundhara City, Green Road, Motijheel and Savar.`,
     "Housed in a clean and customer-friendly environment with alert service staff, providing quality service to our customers is our primary goal. Fresh, hygienic, tasty food at an affordable price is the commitment and motto of BFC.",
     "The food of BFC is liked by its Patrons. The face of a satisfied customer is our inspiration. Its phenomenal growth in sales is a testimony to its bright growth.",
   ],
 };
-
-export const AREAS = [
-  "Dhanmondi",
-  "Gulshan",
-  "Banani",
-  "Badda",
-  "Uttara",
-  "Mirpur",
-  "Baily Road",
-  "Khilgaon",
-  "Eskaton",
-  "Jamuna Future Park",
-  "Bashundhara City",
-  "Green Road",
-  "Motijheel",
-];
 
 export const TICKER = [
   "Crispy Fried Chicken",
