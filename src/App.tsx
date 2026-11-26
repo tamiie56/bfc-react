@@ -7,7 +7,6 @@ import FloatingActions from "./components/FloatingActions";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
-import ScrollProgress from "./components/ScrollProgress";
 import { useReveal } from "./hooks/useReveal";
 import Home from "./pages/Home";
 import MenuPage from "./pages/MenuPage";
@@ -29,7 +28,6 @@ export default function App() {
 
   return (
     <>
-      <ScrollProgress />
       <ScrollManager />
       <Header />
       <main>
