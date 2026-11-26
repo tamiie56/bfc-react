@@ -4,7 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { makeDemoData } from "../demo";
 import { addDays, ago, dhakaDay, fmtClock, fmtDay, itemCount, money, todayDhaka } from "../format";
 import { orderLabel } from "../status";
-import { replaceOrdersAndBookings, useBookings, useOrders } from "../store";
+import { replaceOrdersAndBookings, useBookings, useOrders, useOrdersReady } from "../store";
+import { isRemote } from "../supabase";
 import { Pill, PageHead } from "../ui";
 
 function delta(now: number, before: number): { pct: number; up: boolean } | null {
@@ -33,6 +34,7 @@ const TYPE_COLORS: Record<string, string> = {
 export default function Dashboard() {
   const orders = useOrders();
   const bookings = useBookings();
+  const ready = useOrdersReady();
   const navigate = useNavigate();
 
   const stats = useMemo(() => {
@@ -89,7 +91,7 @@ export default function Dashboard() {
     };
   }, [orders, bookings]);
 
-  const empty = orders.length === 0 && bookings.length === 0;
+  const empty = ready && orders.length === 0 && bookings.length === 0;
   const max = Math.max(...stats.series.map((s) => s.value), 1);
   const topMax = Math.max(...stats.top.map(([, v]) => v.qty), 1);
   const recent = orders.slice(0, 6);
@@ -111,19 +113,22 @@ export default function Dashboard() {
           <div>
             <h3>No orders yet</h3>
             <p className="adm-muted">
-              Orders and table bookings placed on the website appear here live. Want to see how the panel looks with data? Load some
-              sample orders - you can clear them anytime from Settings.
+              {isRemote
+                ? "Orders and table bookings placed on the website appear here live, on every device that is signed in."
+                : "Orders and table bookings placed on the website appear here live. Want to see how the panel looks with data? Load some sample orders - you can clear them anytime from Settings."}
             </p>
           </div>
-          <button
-            className="adm-btn adm-btn--dark"
-            onClick={() => {
-              const d = makeDemoData();
-              replaceOrdersAndBookings(d.orders, d.bookings);
-            }}
-          >
-            <FaMagic aria-hidden /> Load sample data
-          </button>
+          {!isRemote && (
+            <button
+              className="adm-btn adm-btn--dark"
+              onClick={() => {
+                const d = makeDemoData();
+                replaceOrdersAndBookings(d.orders, d.bookings);
+              }}
+            >
+              <FaMagic aria-hidden /> Load sample data
+            </button>
+          )}
         </div>
       )}
 

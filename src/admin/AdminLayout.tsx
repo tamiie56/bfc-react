@@ -16,7 +16,7 @@ import type { IconType } from "react-icons";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { logout } from "./auth";
-import { useBookings, useOrders, useSettings, updateSettings } from "./store";
+import { onStoreError, updateSettings, useBookings, useOrders, useOrdersReady, useSettings } from "./store";
 import { ToastProvider, useToast } from "./ui";
 
 const NAV: { to: string; label: string; icon: IconType; end?: boolean; badge?: "orders" | "bookings" }[] = [
@@ -67,10 +67,14 @@ function useArrivalAlerts() {
   const orders = useOrders();
   const bookings = useBookings();
   const { sound } = useSettings();
+  const ready = useOrdersReady();
   const toast = useToast();
   const seen = useRef<Set<string> | null>(null);
 
+  useEffect(() => onStoreError((m) => toast(m, "warn")), [toast]);
+
   useEffect(() => {
+    if (!ready) return; // wait for the first load, otherwise every old order would look "new"
     const ids = [...orders.map((o) => o.id), ...bookings.map((b) => b.id)];
     if (!seen.current) {
       seen.current = new Set(ids);
@@ -85,7 +89,7 @@ function useArrivalAlerts() {
       fresh.slice(0, 2).forEach((t) => toast(t));
       if (sound) beep();
     }
-  }, [orders, bookings, sound, toast]);
+  }, [orders, bookings, ready, sound, toast]);
 }
 
 function Shell() {

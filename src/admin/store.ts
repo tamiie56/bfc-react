@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { DELIVERY_CHARGE, MENU } from "../data/menu";
 import type { Dish, MenuCategory } from "../data/menu";
 import type { OrderType } from "../cart/order";
+import { SbError, hasSession, isRemote, sb } from "./supabase";
 
 /* =====================================================================
    BFC admin data layer
@@ -99,14 +100,63 @@ const KEYS = {
   settings: "bfc-admin-settings-v1",
 } as const;
 
-/* ---------- tiny reactive localStorage collection ---------- */
+/* ---------- error channel (the layout shows these as toasts) ---------- */
+
+const errorListeners = new Set<(msg: string) => void>();
+
+export function onStoreError(cb: (msg: string) => void): () => void {
+  errorListeners.add(cb);
+  return () => {
+    errorListeners.delete(cb);
+  };
+}
+
+function reportError(e: unknown, what: string) {
+  const detail = e instanceof SbError && e.status === 403 ? "not allowed - are you signed in?" : e instanceof Error ? e.message : "unknown error";
+  errorListeners.forEach((l) => l(`${what}: ${detail}`));
+}
+
+/* ---------- collections ---------- */
 
 interface Collection<T> {
   get: () => T;
-  set: (next: T) => void;
+  /** `strict` makes a failed save throw (used when a customer places an order). */
+  set: (next: T, strict?: boolean) => Promise<void>;
   subscribe: (cb: () => void) => () => void;
+  /** false until the first load from the shared database finished */
+  loaded: () => boolean;
+  clear?: () => Promise<void>;
 }
 
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Runs `run` right away and then every `ms` while at least one component is subscribed. */
+function poller(run: () => Promise<void>, ms: number) {
+  let subs = 0;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const wake = () => {
+    if (!document.hidden) void run();
+  };
+  return {
+    start() {
+      subs += 1;
+      if (subs === 1) {
+        void run();
+        timer = setInterval(wake, ms);
+        document.addEventListener("visibilitychange", wake);
+      }
+    },
+    stop() {
+      subs -= 1;
+      if (subs === 0) {
+        clearInterval(timer);
+        document.removeEventListener("visibilitychange", wake);
+      }
+    },
+  };
+}
+
+/** Browser-only storage (demo mode, no Supabase). Synced between tabs. */
 function collection<T>(key: string, fallback: T, valid: (v: unknown) => v is T): Collection<T> {
   let cache: T | undefined;
   const listeners = new Set<() => void>();
@@ -136,24 +186,233 @@ function collection<T>(key: string, fallback: T, valid: (v: unknown) => v is T):
     });
   }
 
+  const set = (next: T): Promise<void> => {
+    cache = next;
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      /* storage full / blocked - keep the in-memory copy */
+    }
+    emit();
+    return Promise.resolve();
+  };
+
   return {
     get: () => {
       if (cache === undefined) cache = read();
       return cache;
     },
-    set: (next) => {
-      cache = next;
-      try {
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        /* storage full / blocked - keep the in-memory copy */
+    set,
+    subscribe: (cb) => {
+      listeners.add(cb);
+      return () => {
+        listeners.delete(cb);
+      };
+    },
+    loaded: () => true,
+    clear: () => set(fallback),
+  };
+}
+
+interface Row {
+  id: string;
+  placedAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Orders / bookings in the shared Supabase table. Only signed-in team members can read them
+ * (Row Level Security); customers can only insert. `set()` diffs old vs new and sends the changes.
+ */
+function remoteTable<T extends Row>(table: string): Collection<T[]> {
+  let items: T[] = [];
+  let isLoaded = false;
+  let pending = 0;
+  const listeners = new Set<() => void>();
+  const emit = () => listeners.forEach((l) => l());
+
+  const same = (a: T[], b: T[]) => a.length === b.length && a.every((x, i) => x.id === b[i].id && x.updatedAt === b[i].updatedAt);
+
+  async function pull() {
+    if (pending > 0 || !hasSession()) return;
+    try {
+      const rows = await sb<{ data: T }[]>(`${table}?select=data&order=created_at.desc&limit=1000`);
+      if (pending > 0) return; // a save started meanwhile - its result is newer
+      const list = rows.map((r) => r.data).sort((a, b) => b.placedAt.localeCompare(a.placedAt));
+      const first = !isLoaded;
+      isLoaded = true;
+      if (first || !same(list, items)) {
+        items = list;
+        emit();
       }
+    } catch {
+      /* offline or signed out - try again on the next tick */
+    }
+  }
+
+  const p = poller(pull, 4000);
+
+  return {
+    get: () => items,
+    set: async (next, strict = false) => {
+      const prev = items;
+      const prevMap = new Map(prev.map((x) => [x.id, x]));
+      const nextIds = new Set(next.map((x) => x.id));
+      items = next;
       emit();
+
+      const jobs: Promise<unknown>[] = [];
+      for (const x of next) {
+        const old = prevMap.get(x.id);
+        if (!old) {
+          jobs.push(
+            sb(table, { method: "POST", body: { id: x.id, data: x }, prefer: "return=minimal" }).catch((e: unknown) => {
+              if (e instanceof SbError && e.status === 409) return; // already saved (retry)
+              throw e;
+            })
+          );
+        } else if (old !== x) {
+          jobs.push(sb(`${table}?id=eq.${encodeURIComponent(x.id)}`, { method: "PATCH", body: { data: x }, prefer: "return=minimal" }));
+        }
+      }
+      for (const old of prev) {
+        if (!nextIds.has(old.id)) jobs.push(sb(`${table}?id=eq.${encodeURIComponent(old.id)}`, { method: "DELETE" }));
+      }
+      if (jobs.length === 0) return;
+
+      pending += 1;
+      try {
+        await Promise.all(jobs);
+      } catch (e) {
+        items = prev;
+        emit();
+        reportError(e, "Could not save");
+        if (strict) throw e;
+      } finally {
+        pending -= 1;
+      }
+      if (hasSession()) void pull();
     },
     subscribe: (cb) => {
       listeners.add(cb);
-      return () => listeners.delete(cb);
+      p.start();
+      return () => {
+        listeners.delete(cb);
+        p.stop();
+      };
     },
+    loaded: () => isLoaded,
+    clear: async () => {
+      const prev = items;
+      items = [];
+      emit();
+      pending += 1;
+      try {
+        await sb(`${table}?id=not.is.null`, { method: "DELETE" });
+      } catch (e) {
+        items = prev;
+        emit();
+        reportError(e, "Could not clear");
+      } finally {
+        pending -= 1;
+      }
+    },
+  };
+}
+
+/**
+ * Small shared settings (menu edits, delivery charge) in the `kv` table. Everyone can read them
+ * (the public website needs the live menu), only signed-in team members can write.
+ */
+function remoteKv<T>(key: string, fallback: T, valid: (v: unknown) => v is T): Collection<T> {
+  const cacheKey = `bfc-kv-${key}`;
+  const listeners = new Set<() => void>();
+  const emit = () => listeners.forEach((l) => l());
+  let isLoaded = false;
+  let pending = 0;
+  let asked = false;
+
+  const readCache = (): T => {
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (valid(parsed)) return parsed;
+      }
+    } catch {
+      /* ignore */
+    }
+    return fallback;
+  };
+  const writeCache = (v: T) => {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(v));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // paint instantly from the last known value, then refresh from the database
+  let value: T = typeof window === "undefined" ? fallback : readCache();
+
+  async function pull() {
+    if (pending > 0) return;
+    try {
+      const rows = await sb<{ value: unknown }[]>(`kv?select=value&key=eq.${encodeURIComponent(key)}`);
+      if (pending > 0) return;
+      isLoaded = true;
+      const row = rows[0];
+      if (row && valid(row.value) && !sameJson(row.value, value)) {
+        value = row.value;
+        writeCache(value);
+        emit();
+      }
+    } catch {
+      /* offline - keep the cached value */
+    }
+  }
+
+  const p = poller(pull, 30000);
+
+  return {
+    get: () => {
+      if (!asked && typeof window !== "undefined") {
+        asked = true;
+        void pull();
+      }
+      return value;
+    },
+    set: async (next, strict = false) => {
+      const prev = value;
+      value = next;
+      writeCache(next);
+      emit();
+      pending += 1;
+      try {
+        await sb("kv?on_conflict=key", {
+          method: "POST",
+          body: { key, value: next, updated_at: new Date().toISOString() },
+          prefer: "resolution=merge-duplicates,return=minimal",
+        });
+      } catch (e) {
+        value = prev;
+        writeCache(prev);
+        emit();
+        reportError(e, "Could not save");
+        if (strict) throw e;
+      } finally {
+        pending -= 1;
+      }
+    },
+    subscribe: (cb) => {
+      listeners.add(cb);
+      p.start();
+      return () => {
+        listeners.delete(cb);
+        p.stop();
+      };
+    },
+    loaded: () => isLoaded,
   };
 }
 
@@ -163,17 +422,29 @@ const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "obj
 const EMPTY_MENU: MenuState = { overrides: {}, customItems: [], customCategories: [] };
 const DEFAULT_SETTINGS: Settings = { deliveryCharge: DELIVERY_CHARGE, sound: true };
 
-const ordersStore = collection<AdminOrder[]>(KEYS.orders, [], isArray as (v: unknown) => v is AdminOrder[]);
-const bookingsStore = collection<AdminBooking[]>(KEYS.bookings, [], isArray as (v: unknown) => v is AdminBooking[]);
-const menuStore = collection<MenuState>(KEYS.menu, EMPTY_MENU, (v): v is MenuState => isObject(v) && isObject(v.overrides));
-const settingsStore = collection<Settings>(
-  KEYS.settings,
-  DEFAULT_SETTINGS,
-  (v): v is Settings => isObject(v) && typeof v.deliveryCharge === "number"
-);
+const validMenu = (v: unknown): v is MenuState => isObject(v) && isObject(v.overrides) && Array.isArray(v.customItems) && Array.isArray(v.customCategories);
+const validSettings = (v: unknown): v is Settings => isObject(v) && typeof v.deliveryCharge === "number";
+
+const ordersStore: Collection<AdminOrder[]> = isRemote
+  ? remoteTable<AdminOrder>("orders")
+  : collection<AdminOrder[]>(KEYS.orders, [], isArray as (v: unknown) => v is AdminOrder[]);
+const bookingsStore: Collection<AdminBooking[]> = isRemote
+  ? remoteTable<AdminBooking>("bookings")
+  : collection<AdminBooking[]>(KEYS.bookings, [], isArray as (v: unknown) => v is AdminBooking[]);
+const menuStore: Collection<MenuState> = isRemote
+  ? remoteKv<MenuState>("menu", EMPTY_MENU, validMenu)
+  : collection<MenuState>(KEYS.menu, EMPTY_MENU, validMenu);
+const settingsStore: Collection<Settings> = isRemote
+  ? remoteKv<Settings>("settings", DEFAULT_SETTINGS, validSettings)
+  : collection<Settings>(KEYS.settings, DEFAULT_SETTINGS, validSettings);
 
 function hook<T>(c: Collection<T>): T {
   return useSyncExternalStore(c.subscribe, c.get, c.get);
+}
+
+/** true once orders have been loaded (always true in browser-only mode) */
+export function useOrdersReady(): boolean {
+  return useSyncExternalStore(ordersStore.subscribe, ordersStore.loaded, () => false);
 }
 
 export const useOrders = () => hook(ordersStore);
@@ -185,12 +456,13 @@ const nowIso = () => new Date().toISOString();
 
 /* ---------- orders ---------- */
 
+/** Saves a new customer order. With Supabase this throws when the order could not be saved. */
 export function recordOrder(
   o: Omit<AdminOrder, "status" | "placedAt" | "updatedAt"> & Partial<Pick<AdminOrder, "placedAt">>
-): void {
+): Promise<void> {
   const at = nowIso();
   const order: AdminOrder = { ...o, status: "new", placedAt: o.placedAt ?? at, updatedAt: at };
-  ordersStore.set([order, ...ordersStore.get().filter((x) => x.id !== order.id)]);
+  return ordersStore.set([order, ...ordersStore.get().filter((x) => x.id !== order.id)], true);
 }
 
 export function setOrderStatus(id: string, status: OrderStatus): void {
@@ -205,10 +477,10 @@ export function deleteOrder(id: string): void {
 
 export function recordBooking(
   b: Omit<AdminBooking, "status" | "placedAt" | "updatedAt"> & Partial<Pick<AdminBooking, "placedAt">>
-): void {
+): Promise<void> {
   const at = nowIso();
   const booking: AdminBooking = { ...b, status: "pending", placedAt: b.placedAt ?? at, updatedAt: at };
-  bookingsStore.set([booking, ...bookingsStore.get().filter((x) => x.id !== booking.id)]);
+  return bookingsStore.set([booking, ...bookingsStore.get().filter((x) => x.id !== booking.id)], true);
 }
 
 export function setBookingStatus(id: string, status: BookingStatus): void {
@@ -403,6 +675,7 @@ export function exportBackup(): Backup {
 }
 
 export function importBackup(data: unknown): boolean {
+  if (isRemote) return false; // restoring would overwrite the shared database
   if (!isObject(data) || data.app !== "bfc-admin") return false;
   if (!Array.isArray(data.orders) || !Array.isArray(data.bookings)) return false;
   ordersStore.set(data.orders as AdminOrder[]);
@@ -415,13 +688,14 @@ export function importBackup(data: unknown): boolean {
 }
 
 export function replaceOrdersAndBookings(orders: AdminOrder[], bookings: AdminBooking[]): void {
+  if (isRemote) return; // sample data is only for browser-only mode
   ordersStore.set(orders);
   bookingsStore.set(bookings);
 }
 
 export function clearOrdersAndBookings(): void {
-  ordersStore.set([]);
-  bookingsStore.set([]);
+  void ordersStore.clear?.();
+  void bookingsStore.clear?.();
 }
 
 export function resetMenuEdits(): void {

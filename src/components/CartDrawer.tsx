@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { FaCheckCircle, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { recordBooking, recordOrder, useSettings } from "../admin/store";
+import { isRemote } from "../admin/supabase";
 import { useCart } from "../cart/CartContext";
 import type { CartLine } from "../cart/CartContext";
 import { ORDER_TYPES, isDelivery, itemsText, newBookingId, newOrderId, submitOrder, validPhone } from "../cart/order";
@@ -166,43 +167,48 @@ export default function CartDrawer() {
     setBusy(true);
     setFailed(false);
     try {
-      await submitOrder(payload, dine ? "booking" : "order");
+      const saved = lines.map((l) => ({ name: l.name, category: l.category, price: l.price, qty: l.qty, from: l.from }));
+      const save = () =>
+        dine
+          ? recordBooking({
+              id,
+              name: customer.name.trim(),
+              phone: customer.phone.trim(),
+              area: customer.area,
+              date: booking.date,
+              time: booking.time,
+              guests: booking.guests,
+              note: note.trim(),
+              lines: saved,
+              subtotal,
+              hasFrom,
+            })
+          : recordOrder({
+              id,
+              type,
+              name: customer.name.trim(),
+              phone: customer.phone.trim(),
+              area: customer.area,
+              address: isDelivery(type) ? customer.address.trim() : "",
+              note: note.trim(),
+              lines: saved,
+              subtotal,
+              fee,
+              total,
+              hasFrom,
+            });
 
-      // also keep a copy for the team panel (/admin) - must never break the customer's order
-      try {
-        const saved = lines.map((l) => ({ name: l.name, category: l.category, price: l.price, qty: l.qty, from: l.from }));
-        if (dine) {
-          recordBooking({
-            id,
-            name: customer.name.trim(),
-            phone: customer.phone.trim(),
-            area: customer.area,
-            date: booking.date,
-            time: booking.time,
-            guests: booking.guests,
-            note: note.trim(),
-            lines: saved,
-            subtotal,
-            hasFrom,
-          });
-        } else {
-          recordOrder({
-            id,
-            type,
-            name: customer.name.trim(),
-            phone: customer.phone.trim(),
-            area: customer.area,
-            address: isDelivery(type) ? customer.address.trim() : "",
-            note: note.trim(),
-            lines: saved,
-            subtotal,
-            fee,
-            total,
-            hasFrom,
-          });
+      if (isRemote) {
+        // shared database: the order goes straight to Supabase (throws -> "could not send")
+        await save();
+      } else {
+        await submitOrder(payload, dine ? "booking" : "order");
+        // browser-only mode: keep a copy for the team panel (/admin), never blocking the order
+        try {
+          await save();
+        } catch (err) {
+          console.warn("Could not save a copy for the admin panel", err);
         }
-      } catch (err) {
-        console.warn("Could not save a copy for the admin panel", err);
       }
       try {
         localStorage.setItem(

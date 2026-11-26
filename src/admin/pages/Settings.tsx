@@ -16,6 +16,7 @@ import {
   useOrders,
   useSettings,
 } from "../store";
+import { isRemote } from "../supabase";
 import { PageHead, Switch, useConfirm, useToast } from "../ui";
 
 export default function Settings() {
@@ -106,12 +107,18 @@ export default function Settings() {
         </header>
 
         <div className="adm-note-box">
-          <b>Where is the data stored?</b>
-          <p>
-            Right now the panel keeps its data in this browser, shared with the website in the same browser. Customers&rsquo; orders are still
-            sent to Netlify Forms too, so nothing is lost. For a team using the panel from different phones and computers, connect a shared
-            database (Firebase / Supabase) - the whole data layer is in <code>src/admin/store.ts</code>.
-          </p>
+          <b>{isRemote ? "Shared database (Supabase)" : "Browser-only storage"}</b>
+          {isRemote ? (
+            <p>
+              Orders, bookings, menu edits and settings are stored in your Supabase project, so every signed-in team member sees the same
+              live data on any phone or computer. Menu and delivery-charge changes reach customers within about 30 seconds.
+            </p>
+          ) : (
+            <p>
+              Supabase is not connected, so the panel keeps its data in this browser only (shared with the website in the same browser).
+              Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to share data across devices - see the README.
+            </p>
+          )}
         </div>
 
         <div className="adm-actions-grid">
@@ -121,32 +128,36 @@ export default function Settings() {
             <span>Orders, bookings, menu and settings as one .json file</span>
           </button>
 
-          <button className="adm-action" onClick={() => fileRef.current?.click()}>
-            <FaUpload aria-hidden />
-            <b>Restore backup</b>
-            <span>Load a backup file you downloaded earlier</span>
-          </button>
+          {!isRemote && (
+            <button className="adm-action" onClick={() => fileRef.current?.click()}>
+              <FaUpload aria-hidden />
+              <b>Restore backup</b>
+              <span>Load a backup file you downloaded earlier</span>
+            </button>
+          )}
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={restore} />
 
-          <button
-            className="adm-action"
-            onClick={() =>
-              ask({
-                title: "Load sample data?",
-                text: "This replaces the current orders and bookings with sample ones so you can explore the panel. Your menu edits are kept.",
-                confirmLabel: "Load sample data",
-                onYes: () => {
-                  const d = makeDemoData();
-                  replaceOrdersAndBookings(d.orders, d.bookings);
-                  toast("Sample data loaded");
-                },
-              })
-            }
-          >
-            <FaMagic aria-hidden />
-            <b>Load sample data</b>
-            <span>Fill the dashboard with demo orders to try things out</span>
-          </button>
+          {!isRemote && (
+            <button
+              className="adm-action"
+              onClick={() =>
+                ask({
+                  title: "Load sample data?",
+                  text: "This replaces the current orders and bookings with sample ones so you can explore the panel. Your menu edits are kept.",
+                  confirmLabel: "Load sample data",
+                  onYes: () => {
+                    const d = makeDemoData();
+                    replaceOrdersAndBookings(d.orders, d.bookings);
+                    toast("Sample data loaded");
+                  },
+                })
+              }
+            >
+              <FaMagic aria-hidden />
+              <b>Load sample data</b>
+              <span>Fill the dashboard with demo orders to try things out</span>
+            </button>
+          )}
 
           <button
             className="adm-action"
@@ -175,7 +186,7 @@ export default function Settings() {
             onClick={() =>
               ask({
                 title: "Clear all orders and bookings?",
-                text: "Every order and table booking is removed from the panel. Download a backup first if you may need them.",
+                text: "Every order and table booking is removed" + (isRemote ? " from the shared database for everyone" : " from the panel") + ". Download a backup first if you may need them.",
                 confirmLabel: "Clear everything",
                 danger: true,
                 onYes: () => {
@@ -196,10 +207,17 @@ export default function Settings() {
         <header className="adm-card__head">
           <h3>Admin login</h3>
         </header>
-        <p className="adm-muted">
-          Set <code>VITE_ADMIN_USER</code> and <code>VITE_ADMIN_PASS</code> in your <code>.env</code> file (and in Netlify &rarr; Environment
-          variables), then rebuild. This login only keeps casual visitors out - before real use, switch to a proper backend login.
-        </p>
+        {isRemote ? (
+          <p className="adm-muted">
+            Team members sign in with the email and password created in Supabase (Authentication &rarr; Users). To add or remove a team
+            member, or change a password, do it there. Keep &ldquo;Allow new users to sign up&rdquo; switched off.
+          </p>
+        ) : (
+          <p className="adm-muted">
+            Set <code>VITE_ADMIN_USER</code> and <code>VITE_ADMIN_PASS</code> in your <code>.env</code> file, then rebuild. This demo login
+            only keeps casual visitors out - connect Supabase for real, secure sign-in.
+          </p>
+        )}
       </section>
 
       {dialog}
