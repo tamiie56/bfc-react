@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
 import { useReveal } from "./hooks/useReveal";
+import FeedbackPage from "./pages/FeedbackPage";
 import Home from "./pages/Home";
 import MenuPage from "./pages/MenuPage";
 
@@ -34,6 +35,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<MenuPage />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

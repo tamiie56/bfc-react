@@ -42,6 +42,15 @@ A separate panel for the BFC team (orders, table bookings, menu, customers). It 
 - **Customers:** built automatically from orders and bookings (by phone number), with order history and CSV export.
 - **Settings:** delivery charge, new-order sound, backup, reset.
 
+### Feedback page -> Google Sheet
+
+The `/feedback` page sends name, email, phone and feedback to a Google Sheet through a small Google Apps Script.
+
+1. Create a Google Sheet (leave it empty, the script adds the header row).
+2. In the sheet: Extensions -> Apps Script, paste `google-apps-script/feedback.gs`, save.
+3. Deploy -> New deployment -> Web app -> Execute as: Me, Who has access: Anyone. Copy the Web app URL.
+4. Put it in `.env` as `VITE_FEEDBACK_SHEET_URL=...` (also add it in your Vercel/Netlify environment variables), then rebuild.
+
 ### Supabase setup (shared data + secure login)
 Without Supabase the panel runs in browser-only demo mode (data stays in one browser, login is a front-end gate). With Supabase, orders go to a shared database, every team member sees the same live data, and login is real.
 

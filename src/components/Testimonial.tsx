@@ -1,6 +1,7 @@
+import { Link } from "react-router-dom";
 import { FaQuoteLeft, FaRegStar, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import reviewImg from "../assets/images/review.jpg";
-import { REVIEW, SITE } from "../data/content";
+import { REVIEW } from "../data/content";
 import { useParallax } from "../hooks/useParallax";
 import { delay } from "../utils/style";
 
@@ -27,9 +28,9 @@ export default function Testimonial() {
           </ul>
           <p className="review__text">{REVIEW.text}</p>
           <h3 className="review__name">{REVIEW.name}</h3>
-          <a href={SITE.feedbackUrl} target="_blank" rel="noreferrer" className="btn btn--ghost btn--sm">
+          <Link to="/feedback" className="btn btn--ghost btn--sm">
             Send Feedback
-          </a>
+          </Link>
         </div>
       </div>
     </section>

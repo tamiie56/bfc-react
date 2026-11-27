@@ -28,7 +28,7 @@ function siteData(): BotData {
     phoneHref: SITE.phoneHref,
     email: SITE.email,
     hours: SITE.hours,
-    feedbackUrl: SITE.feedbackUrl,
+    feedbackUrl: "/feedback",
     addressLine: SITE.mapQuery,
     areas: AREAS,
     outletCount: OUTLET_COUNT,

@@ -17,6 +17,7 @@ export default function Header() {
   const { pathname } = useLocation();
   const { count, openCart } = useCart();
   const onMenu = pathname === "/menu";
+  const onFeedback = pathname === "/feedback";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showBar, setShowBar] = useState(true);
@@ -42,7 +43,7 @@ export default function Header() {
   }, [open]);
 
   const close = () => setOpen(false);
-  const cls = (id: string) => (!onMenu && active === id ? "active" : "");
+  const cls = (id: string) => (!onMenu && !onFeedback && active === id ? "active" : "");
 
   return (
     <header className={`header ${scrolled ? "header--solid" : ""}`}>
@@ -93,7 +94,7 @@ export default function Header() {
           <li className={onMenu ? "active" : ""}>
             <Link to="/menu" onClick={close}>Menu</Link>
           </li>
-          <li className={`has-dropdown ${!onMenu && MORE_IDS.includes(active) ? "active" : ""}`}>
+          <li className={`has-dropdown ${!onMenu && !onFeedback && MORE_IDS.includes(active) ? "active" : ""}`}>
             <Link to={to("gallery")} onClick={close}>
               Dropdown <FaAngleDown aria-hidden />
             </Link>
@@ -103,12 +104,12 @@ export default function Header() {
               <li><Link to={to("outlets")} onClick={close}>Outlets</Link></li>
               <li><Link to="/menu" onClick={close}>Menu</Link></li>
               <li>
-                <a href={SITE.feedbackUrl} target="_blank" rel="noreferrer">Feedback</a>
+                <Link to="/feedback" onClick={close}>Feedback</Link>
               </li>
             </ul>
           </li>
-          <li>
-            <a href={SITE.feedbackUrl} target="_blank" rel="noreferrer">Send Feedback</a>
+          <li className={onFeedback ? "active" : ""}>
+            <Link to="/feedback" onClick={close}>Send Feedback</Link>
           </li>
           <li className={cls("testimonials")}>
             <Link to={to("testimonials")} onClick={close}>Reviews</Link>

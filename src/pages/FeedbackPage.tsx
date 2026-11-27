@@ -1,0 +1,187 @@
+import { useState, type FormEvent } from "react";
+import { FaCheckCircle, FaPaperPlane } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import heroImg from "../assets/images/hero.jpg";
+
+/** Google Apps Script web app that writes every feedback into the Google Sheet (see google-apps-script/feedback.gs) */
+const SHEET_URL = ((import.meta.env.VITE_FEEDBACK_SHEET_URL as string | undefined) ?? "").trim();
+
+interface Form {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  /** honeypot: hidden from people, bots fill it */
+  website: string;
+}
+
+const EMPTY: Form = { name: "", email: "", phone: "", message: "", website: "" };
+
+function validate(f: Form): Record<string, string> {
+  const e: Record<string, string> = {};
+  if (f.name.trim().length < 2) e.name = "Please enter your name";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email.trim())) e.email = "Enter a valid email address";
+  const digits = f.phone.replace(/[\s\-()+]/g, "");
+  if (!/^\d{10,15}$/.test(digits)) e.phone = "Enter a valid phone number";
+  if (f.message.trim().length < 5) e.message = "Please write your feedback (at least 5 characters)";
+  return e;
+}
+
+export default function FeedbackPage() {
+  const [form, setForm] = useState<Form>(EMPTY);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  const set = (key: keyof Form) => (ev: { target: { value: string } }) => {
+    setForm((f) => ({ ...f, [key]: ev.target.value }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
+  };
+
+  async function submit(ev: FormEvent) {
+    ev.preventDefault();
+    if (status === "sending") return;
+
+    const found = validate(form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
+
+    if (!SHEET_URL) {
+      console.warn("VITE_FEEDBACK_SHEET_URL is empty - see google-apps-script/feedback.gs");
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sending");
+    try {
+      // Apps Script has no CORS headers, so this is a "no-cors" request with a plain-text body.
+      // The reply can't be read, but a network failure still throws.
+      await fetch(SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          message: form.message.trim(),
+          website: form.website,
+        }),
+      });
+      setForm(EMPTY);
+      setStatus("done");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <>
+      <section className="page-hero">
+        <div className="page-hero__bg">
+          <img src={heroImg} alt="" />
+        </div>
+        <div className="container page-hero__inner">
+          <nav className="crumbs" aria-label="Breadcrumb">
+            <Link to={{ pathname: "/", hash: "#home" }}>Home</Link>
+            <span>/</span>
+            <span>Send Feedback</span>
+          </nav>
+          <h1 className="page-hero__title">Send Feedback</h1>
+          <p className="page-hero__lead">Good or bad, we read every message and use it to serve you better.</p>
+        </div>
+      </section>
+
+      <section className="feedback section">
+        <div className="container">
+          <div className="feedback__card">
+            {status === "done" ? (
+              <div className="feedback__done" role="status">
+                <FaCheckCircle aria-hidden />
+                <h2>Thank you!</h2>
+                <p>Your feedback has reached the BFC team.</p>
+                <button type="button" className="btn btn--yellow" onClick={() => setStatus("idle")}>
+                  Send another
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={submit} noValidate>
+                <div className="feedback__row">
+                  <label className="field">
+                    <span>Name</span>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={set("name")}
+                      autoComplete="name"
+                      placeholder="Your full name"
+                      aria-invalid={!!errors.name}
+                    />
+                    {errors.name && <small className="field__err">{errors.name}</small>}
+                  </label>
+
+                  <label className="field">
+                    <span>Phone number</span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={form.phone}
+                      onChange={set("phone")}
+                      autoComplete="tel"
+                      placeholder="01XXXXXXXXX"
+                      aria-invalid={!!errors.phone}
+                    />
+                    {errors.phone && <small className="field__err">{errors.phone}</small>}
+                  </label>
+                </div>
+
+                <label className="field">
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={set("email")}
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    aria-invalid={!!errors.email}
+                  />
+                  {errors.email && <small className="field__err">{errors.email}</small>}
+                </label>
+
+                <label className="field">
+                  <span>Your feedback</span>
+                  <textarea
+                    rows={6}
+                    value={form.message}
+                    onChange={set("message")}
+                    maxLength={2000}
+                    placeholder="Tell us about your experience..."
+                    aria-invalid={!!errors.message}
+                  />
+                  {errors.message && <small className="field__err">{errors.message}</small>}
+                </label>
+
+                {/* honeypot */}
+                <div className="feedback__trap" aria-hidden="true">
+                  <label>
+                    Website
+                    <input type="text" tabIndex={-1} autoComplete="off" value={form.website} onChange={set("website")} />
+                  </label>
+                </div>
+
+                {status === "error" && (
+                  <p className="feedback__error" role="alert">
+                    Sorry, we could not send your feedback. Please try again in a moment.
+                  </p>
+                )}
+
+                <button type="submit" className="btn btn--red feedback__submit" disabled={status === "sending"}>
+                  {status === "sending" ? "Sending..." : "Send Feedback"} <FaPaperPlane aria-hidden />
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
