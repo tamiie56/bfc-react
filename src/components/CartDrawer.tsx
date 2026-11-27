@@ -589,6 +589,9 @@ export default function CartDrawer() {
                   <Link to="/menu" className="btn btn--yellow btn--sm" onClick={closeCart}>
                     Back to Menu
                   </Link>
+                  <Link to="/my-orders" className="btn btn--ghost btn--sm" onClick={closeCart}>
+                    My Orders
+                  </Link>
                 </div>
                 {pdfFailed && <p className="drawer__hint">Could not create the PDF on this device. Please take a screenshot of this screen instead.</p>}
               </div>

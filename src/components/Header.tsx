@@ -18,6 +18,7 @@ export default function Header() {
   const { count, openCart } = useCart();
   const onMenu = pathname === "/menu";
   const onFeedback = pathname === "/feedback";
+  const onMyOrders = pathname === "/my-orders";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showBar, setShowBar] = useState(true);
@@ -43,7 +44,7 @@ export default function Header() {
   }, [open]);
 
   const close = () => setOpen(false);
-  const cls = (id: string) => (!onMenu && !onFeedback && active === id ? "active" : "");
+  const cls = (id: string) => (!onMenu && !onFeedback && !onMyOrders && active === id ? "active" : "");
 
   return (
     <header className={`header ${scrolled ? "header--solid" : ""}`}>
@@ -93,6 +94,9 @@ export default function Header() {
           </li>
           <li className={onMenu ? "active" : ""}>
             <Link to="/menu" onClick={close}>Menu</Link>
+          </li>
+          <li className={onMyOrders ? "active" : ""}>
+            <Link to="/my-orders" onClick={close}>My Orders</Link>
           </li>
           <li className={`has-dropdown ${!onMenu && !onFeedback && MORE_IDS.includes(active) ? "active" : ""}`}>
             <Link to={to("gallery")} onClick={close}>

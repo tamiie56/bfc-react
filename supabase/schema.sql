@@ -135,3 +135,59 @@ $$;
 
 revoke all on function public.cancel_my_order(text, text) from public;
 grant execute on function public.cancel_my_order(text, text) to anon, authenticated;
+
+-- ---------- customer "My Orders" lookup ----------
+-- Customers still can NOT read the tables. This function returns only the orders / bookings of
+-- ONE phone number (last 30 days, newest first, max 30) and only the fields the customer needs
+-- (no address). Safe to run more than once.
+create index if not exists orders_phone_idx
+  on public.orders ((right(regexp_replace(coalesce(data->>'phone', ''), '\D', '', 'g'), 10)));
+create index if not exists bookings_phone_idx
+  on public.bookings ((right(regexp_replace(coalesce(data->>'phone', ''), '\D', '', 'g'), 10)));
+
+create or replace function public.my_orders(p_phone text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_digits text := right(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), 10);
+  v_out    jsonb;
+begin
+  if length(v_digits) < 10 then
+    return '[]'::jsonb;
+  end if;
+
+  select coalesce(jsonb_agg(t.x), '[]'::jsonb) into v_out
+  from (
+    select u.x
+    from (
+      select jsonb_build_object(
+               'id', id, 'kind', 'order', 'type', data->>'type', 'status', data->>'status',
+               'area', data->>'area', 'lines', data->'lines', 'subtotal', data->'subtotal',
+               'fee', data->'fee', 'total', data->'total', 'placedAt', data->>'placedAt',
+               'cancelledBy', data->>'cancelledBy') as x
+        from public.orders
+       where right(regexp_replace(coalesce(data->>'phone', ''), '\D', '', 'g'), 10) = v_digits
+         and created_at > now() - interval '30 days'
+      union all
+      select jsonb_build_object(
+               'id', id, 'kind', 'booking', 'status', data->>'status', 'area', data->>'area',
+               'lines', data->'lines', 'subtotal', data->'subtotal', 'placedAt', data->>'placedAt',
+               'date', data->>'date', 'time', data->>'time', 'guests', data->'guests',
+               'cancelledBy', data->>'cancelledBy') as x
+        from public.bookings
+       where right(regexp_replace(coalesce(data->>'phone', ''), '\D', '', 'g'), 10) = v_digits
+         and created_at > now() - interval '30 days'
+    ) u
+    order by u.x->>'placedAt' desc
+    limit 30
+  ) t;
+
+  return v_out;
+end;
+$$;
+
+revoke all on function public.my_orders(text) from public;
+grant execute on function public.my_orders(text) to anon, authenticated;

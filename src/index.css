@@ -4161,3 +4161,166 @@ button {
   color: #8f1d17;
   text-align: center;
 }
+
+/* ---------- My Orders page ---------- */
+.myo {
+  max-width: 760px;
+}
+.myo__lookup {
+  margin-bottom: 1.6rem;
+}
+.myo__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 0.9rem;
+}
+.myo__head h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.myo__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--red);
+  cursor: pointer;
+}
+.myo__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.myo__card {
+  background: #fff;
+  border: 1.5px solid #eadfd3;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 8px 24px rgba(30, 12, 4, 0.06);
+}
+.myo__card--cancelled {
+  opacity: 0.75;
+}
+.myo__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+.myo__top small {
+  display: block;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+.myo__id {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+.myo__pill {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #7a5a00;
+}
+.myo__pill--completed {
+  background: #e3f5e6;
+  color: #17692a;
+}
+.myo__pill--cancelled {
+  background: #fdeceb;
+  color: #8f1d17;
+}
+.myo__pill--preparing,
+.myo__pill--ready,
+.myo__pill--confirmed {
+  background: #e6f0ff;
+  color: #1a4a99;
+}
+.myo__meta {
+  margin: 0.6rem 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.myo__meta svg {
+  color: var(--red);
+  margin-right: 0.15rem;
+}
+.myo__items {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  border-top: 1px dashed #eadfd3;
+  border-bottom: 1px dashed #eadfd3;
+  display: grid;
+  gap: 0.3rem;
+}
+.myo__items li,
+.myo__sum {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.myo__sum {
+  padding-top: 0.55rem;
+  font-weight: 700;
+}
+.myo__cancelled {
+  margin: 0.6rem 0 0;
+  color: #8f1d17;
+  font-weight: 700;
+}
+.myo__cancelBtn {
+  margin-top: 0.7rem;
+  background: none;
+  border: 1.5px solid #e0b4af;
+  color: #b3261e;
+  font: inherit;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+.myo__confirm {
+  margin-top: 0.7rem;
+  background: #fff6f5;
+  border: 1.5px solid #f0c9c5;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+}
+.myo__confirm p {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+.myo__confirm div {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.myo__hint {
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.myo__hint a {
+  color: var(--red);
+  font-weight: 700;
+}
+.myo__msg {
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+}
+.myo__msg--err {
+  color: #b3261e;
+  font-weight: 600;
+}

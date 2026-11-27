@@ -8,10 +8,10 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
 import { useReveal } from "./hooks/useReveal";
-import CancelOrderPage from "./pages/CancelOrderPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import Home from "./pages/Home";
 import MenuPage from "./pages/MenuPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 
 // the team panel is its own bundle - customers never download it
 const AdminApp = lazy(() => import("./admin/AdminApp"));
@@ -37,7 +37,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/feedback" element={<FeedbackPage />} />
-          <Route path="/cancel-order" element={<CancelOrderPage />} />
+          <Route path="/my-orders" element={<MyOrdersPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

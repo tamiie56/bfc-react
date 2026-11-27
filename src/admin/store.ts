@@ -539,6 +539,48 @@ export async function cancelMyOrder(id: string, phone: string): Promise<CancelRe
   return "ok";
 }
 
+export interface MyOrder {
+  id: string;
+  kind: "order" | "booking";
+  type?: OrderType;
+  status: string;
+  area: string;
+  lines: OrderLine[];
+  subtotal: number;
+  fee?: number;
+  total?: number;
+  placedAt: string;
+  date?: string;
+  time?: string;
+  guests?: number;
+  cancelledBy?: "customer" | "team";
+}
+
+/** Everything this phone number ordered / booked recently (customer "My Orders"). null = could not load. */
+export async function findMyOrders(phone: string): Promise<MyOrder[] | null> {
+  if (last10(phone).length < 10) return [];
+
+  if (isRemote) {
+    try {
+      const rows = await sb<MyOrder[]>("rpc/my_orders", { method: "POST", body: { p_phone: phone } });
+      return Array.isArray(rows) ? rows : [];
+    } catch {
+      return null;
+    }
+  }
+
+  // browser-only (demo) mode
+  const orders: MyOrder[] = ordersStore
+    .get()
+    .filter((o) => last10(o.phone) === last10(phone))
+    .map((o) => ({ id: o.id, kind: "order", type: o.type, status: o.status, area: o.area, lines: o.lines, subtotal: o.subtotal, fee: o.fee, total: o.total, placedAt: o.placedAt, cancelledBy: o.cancelledBy }));
+  const bookings: MyOrder[] = bookingsStore
+    .get()
+    .filter((b) => last10(b.phone) === last10(phone))
+    .map((b) => ({ id: b.id, kind: "booking", status: b.status, area: b.area, lines: b.lines, subtotal: b.subtotal, placedAt: b.placedAt, date: b.date, time: b.time, guests: b.guests, cancelledBy: b.cancelledBy }));
+  return [...orders, ...bookings].sort((a, b) => b.placedAt.localeCompare(a.placedAt));
+}
+
 /* ---------- settings ---------- */
 
 export function getSettings(): Settings {
