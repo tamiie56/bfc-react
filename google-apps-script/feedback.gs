@@ -37,6 +37,7 @@ function doPost(e) {
     }
     // the phone cell is always plain text, so 01791136081 keeps its leading 0
     var row = sheet.getLastRow() + 1;
+    sheet.getRange(row, 1).setNumberFormat("MM/dd/yyyy HH:mm:ss"); // date and time, not just the date
     sheet.getRange(row, 4).setNumberFormat("@");
     sheet.getRange(row, 1, 1, HEADERS.length).setValues([[new Date(), name, email, phone, message]]);
 
