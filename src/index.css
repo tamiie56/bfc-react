@@ -4106,64 +4106,34 @@ button {
 
 /* right side: the photo, wiped in from the left and lifted away upwards */
 .hero__shots {
-  --bw: clamp(280px, 31vw, 480px);
+  --bw: clamp(260px, 28vw, 400px);
   position: absolute;
   top: 50%;
-  right: clamp(1.5rem, 6vw, 7rem);
+  right: clamp(2rem, 8vw, 9rem);
   z-index: 1;
   width: var(--bw);
-  height: clamp(340px, 60vh, 540px);
+  aspect-ratio: 1;
   transform: translateY(-48%);
   pointer-events: none;
 }
 
-.hero__word {
+/* dashed ring turning around the plate, like the Foods section */
+.hero__shots::before {
+  content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: clamp(5rem, 12vw, 10rem);
-  line-height: 1;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: transparent;
-  -webkit-text-stroke: 2px color-mix(in srgb, var(--accent) 55%, transparent);
-  transform: translate(-50%, -42%) scale(1.18);
-  opacity: 0;
-  transition: opacity 0.9s ease, transform 1.2s cubic-bezier(0.22, 0.8, 0.3, 1);
-}
-
-.hero__word.is-on {
-  opacity: 0.5;
-  transform: translate(-50%, -50%);
-}
-
-.hero__sparks {
-  position: absolute;
-  inset: 8% 0 0;
-}
-
-.hero__sparks i {
-  position: absolute;
-  bottom: 0;
+  inset: -16px;
   border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 10px 2px var(--accent);
-  opacity: 0;
-  animation: heroSpark linear infinite;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  animation: spin 26s linear infinite;
 }
 
 .hero__blinds {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 22px;
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  background: rgba(10, 4, 2, 0.5);
-  box-shadow: 0 34px 70px rgba(0, 0, 0, 0.6), 0 0 50px color-mix(in srgb, var(--accent) 35%, transparent);
-  animation: heroBob 5s ease-in-out infinite alternate;
+  border-radius: 50%;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  animation: floaty 5s ease-in-out infinite;
 }
 
 .hero__shot {
@@ -4199,8 +4169,8 @@ button {
 
 .hero__ribbon {
   position: absolute;
-  left: -9%;
-  bottom: 12%;
+  left: -4%;
+  bottom: 8%;
   padding: 0.55rem 1.2rem 0.5rem;
   background: var(--accent);
   color: #1b0f0a;
@@ -4249,17 +4219,6 @@ button {
   to { clip-path: inset(0 0 0 0); transform: none; }
 }
 
-@keyframes heroBob {
-  from { translate: 0 -6px; }
-  to { translate: 0 6px; }
-}
-
-@keyframes heroSpark {
-  0% { transform: translateY(0) scale(0.6); opacity: 0; }
-  15% { opacity: 0.9; }
-  100% { transform: translateY(-460%) scale(1.1); opacity: 0; }
-}
-
 @keyframes heroShine {
   0%, 55% { background-position: 100% 0; }
   100% { background-position: 0 0; }
@@ -4277,27 +4236,11 @@ button {
   }
 
   .hero__shots {
-    --bw: min(84vw, 360px);
+    --bw: min(66vw, 280px);
     position: relative;
     top: auto;
     right: auto;
-    height: min(62vw, 300px);
-    margin: 0 auto 3.5rem;
+    margin: 0.5rem auto 3.5rem;
     transform: none;
   }
-
-  .hero__word {
-    font-size: clamp(4rem, 22vw, 7rem);
-  }
-
-  .hero__ribbon {
-    left: -4%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero__sparks {
-    display: none;
-  }
-
 }
