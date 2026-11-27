@@ -1980,17 +1980,17 @@ button.adm-list__row:hover {
   font-size: 0.95rem;
   padding: 0.25rem 0.75rem;
 }
-.adm-table td.adm-table__act {
+.adm-act {
   display: flex;
   gap: 0.4rem;
   justify-content: flex-end;
   align-items: center;
 }
 @media (max-width: 900px) {
-  .adm-table td.adm-table__act {
+  .adm-act {
     justify-content: flex-start;
   }
-  .adm-table td.adm-table__act .adm-btn {
+  .adm-table td.adm-table__act .adm-act .adm-btn {
     width: auto;
     flex: 1;
   }

@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { AREAS } from "../../data/content";
 import { addDays, ago, csvEscape, dhakaDay, downloadFile, fmtDateTime, fmtTime, itemCount, money, todayDhaka } from "../format";
 import { printReceipt } from "../receipt";
-import { ORDER_STATUSES, nextOrderStep, orderLabel } from "../status";
+import { ORDER_STATUSES, isActiveOrder, nextOrderStep, orderLabel } from "../status";
 import { deleteOrder, setOrderStatus, useOrders } from "../store";
 import type { AdminOrder, OrderStatus } from "../store";
 import { Drawer, Empty, PageHead, Pill, useConfirm, useToast } from "../ui";
@@ -137,7 +137,7 @@ export default function Orders() {
   const cancel = (o: AdminOrder) =>
     ask({
       title: `Cancel ${o.id}?`,
-      text: `${o.name}'s order (${o.area}) will be marked as cancelled and won't count towards revenue.${o.status === "completed" ? " It was already completed - only do this for a mistake / refund." : ""}`,
+      text: `${o.name}'s order (${o.area}) will be marked as cancelled and won't count towards revenue.`,
       confirmLabel: "Cancel order",
       danger: true,
       onYes: () => {
@@ -290,16 +290,18 @@ export default function Orders() {
                       <Pill tone={o.status}>{orderLabel(o.status, o.type)}</Pill>
                     </td>
                     <td className="adm-table__act" onClick={(e) => e.stopPropagation()}>
-                      {step && (
-                        <button className="adm-btn adm-btn--sm adm-btn--red" onClick={() => advance(o)}>
-                          {step.label}
-                        </button>
-                      )}
-                      {o.status !== "cancelled" && (
-                        <button className="adm-btn adm-btn--sm adm-btn--ghost adm-btn--text-danger" onClick={() => cancel(o)} title="Cancel this order">
-                          <FaBan aria-hidden /> Cancel
-                        </button>
-                      )}
+                      <div className="adm-act">
+                        {step && (
+                          <button className="adm-btn adm-btn--sm adm-btn--red" onClick={() => advance(o)}>
+                            {step.label}
+                          </button>
+                        )}
+                        {isActiveOrder(o) && (
+                          <button className="adm-btn adm-btn--sm adm-btn--ghost adm-btn--text-danger" onClick={() => cancel(o)} title="Cancel this order">
+                            <FaBan aria-hidden /> Cancel
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -328,7 +330,7 @@ export default function Orders() {
                   {nextOrderStep(open)!.label}
                 </button>
               )}
-              {open.status !== "cancelled" && (
+              {isActiveOrder(open) && (
                 <button className="adm-btn adm-btn--danger" onClick={() => cancel(open)}>
                   Cancel order
                 </button>
