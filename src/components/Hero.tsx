@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import heroImg from "../assets/images/hero.jpg";
 import { useParallax } from "../hooks/useParallax";
 import { delay } from "../utils/style";
+import HeroShowcase from "./HeroShowcase";
 import OpenStatus from "./OpenStatus";
 
 export default function Hero() {
@@ -42,6 +43,7 @@ export default function Hero() {
         </div>
       </div>
 
+      <HeroShowcase />
     </section>
   );
 }
