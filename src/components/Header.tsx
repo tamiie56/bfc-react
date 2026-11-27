@@ -106,10 +106,6 @@ export default function Header() {
               <li><Link to={to("gallery")} onClick={close}>Gallery</Link></li>
               <li><Link to={to("services")} onClick={close}>Services</Link></li>
               <li><Link to={to("outlets")} onClick={close}>Outlets</Link></li>
-              <li><Link to="/menu" onClick={close}>Menu</Link></li>
-              <li>
-                <Link to="/feedback" onClick={close}>Feedback</Link>
-              </li>
             </ul>
           </li>
           <li className={onFeedback ? "active" : ""}>
