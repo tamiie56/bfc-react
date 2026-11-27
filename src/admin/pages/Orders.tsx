@@ -288,6 +288,7 @@ export default function Orders() {
                     </td>
                     <td data-label="Status">
                       <Pill tone={o.status}>{orderLabel(o.status, o.type)}</Pill>
+                      {o.status === "cancelled" && o.cancelledBy === "customer" && <small>by customer</small>}
                     </td>
                     <td className="adm-table__act" onClick={(e) => e.stopPropagation()}>
                       <div className="adm-act">
@@ -317,6 +318,7 @@ export default function Orders() {
           sub={
             <>
               <Pill tone={open.status}>{orderLabel(open.status, open.type)}</Pill> <span>{open.type}</span>
+              {open.status === "cancelled" && open.cancelledBy && <span className="adm-muted">Cancelled by {open.cancelledBy === "customer" ? "customer" : "team"}</span>}
               <span className="adm-outlet">
                 <FaMapMarkerAlt aria-hidden /> {open.area}
               </span>

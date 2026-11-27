@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { FaCheckCircle, FaDownload, FaPhoneAlt, FaShoppingBag, FaTimes, FaTrashAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { recordBooking, recordOrder, useSettings } from "../admin/store";
+import { cancelMyOrder, recordBooking, recordOrder, useSettings } from "../admin/store";
 import { isRemote } from "../admin/supabase";
 import { useCart } from "../cart/CartContext";
 import type { CartLine } from "../cart/CartContext";
@@ -73,6 +73,8 @@ export default function CartDrawer() {
   const [done, setDone] = useState<Done | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfFailed, setPdfFailed] = useState(false);
+  const [cancelStep, setCancelStep] = useState<"idle" | "confirm" | "busy" | "done">("idle");
+  const [cancelMsg, setCancelMsg] = useState("");
 
   const dine = type === "Dine-in";
   const fee = isDelivery(type) ? deliveryCharge : 0;
@@ -98,6 +100,8 @@ export default function CartDrawer() {
     if (step === "done" || wasDirect.current) {
       setStep("cart");
       setDone(null);
+      setCancelStep("idle");
+      setCancelMsg("");
     }
     wasDirect.current = false;
   }, [isOpen, step]);
@@ -240,6 +244,8 @@ export default function CartDrawer() {
         booking: dine ? booking : null,
       });
       setPdfFailed(false);
+      setCancelStep("idle");
+      setCancelMsg("");
       if (!direct) clear();
       setNote("");
       if (dine) setBooking((b) => ({ ...b, time: "" }));
@@ -249,6 +255,23 @@ export default function CartDrawer() {
       setFailed(true);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const cancelNow = async () => {
+    if (!done || cancelStep === "busy") return;
+    setCancelStep("busy");
+    setCancelMsg("");
+    const res = await cancelMyOrder(done.id, done.phone);
+    if (res === "ok" || res === "already_cancelled") {
+      setCancelStep("done");
+    } else {
+      setCancelStep("idle");
+      setCancelMsg(
+        res === "too_late"
+          ? `We have already started on your ${done.booking ? "booking" : "order"}, so it can't be cancelled online. Please call ${SITE.phone}.`
+          : `We could not cancel it right now. Please try again or call ${SITE.phone}.`
+      );
     }
   };
 
@@ -298,7 +321,7 @@ export default function CartDrawer() {
               <h2>
                 {step === "cart" && "Your Order"}
                 {step === "checkout" && (dine ? "Book a Table" : "Checkout")}
-                {step === "done" && (done?.booking ? "Booking Received" : "Order Placed")}
+                {step === "done" && (cancelStep === "done" ? (done?.booking ? "Booking Cancelled" : "Order Cancelled") : done?.booking ? "Booking Received" : "Order Placed")}
               </h2>
               <button className="drawer__close" onClick={closeCart} aria-label="Close cart">
                 <FaTimes />
@@ -523,6 +546,38 @@ export default function CartDrawer() {
                   {!done.booking && <div className="sum sum--total"><span>Total</span><strong>৳{done.total}</strong></div>}
                   {done.hasFrom && <p className="drawer__hint">&ldquo;From&rdquo; prices will be confirmed on the call.</p>}
                 </div>
+
+                {cancelStep === "done" ? (
+                  <p className="drawer__cancelled" role="status">
+                    Your {done.booking ? "booking" : "order"} <strong>{done.id}</strong> has been cancelled.
+                  </p>
+                ) : (
+                  <div className="drawer__cancel">
+                    {cancelStep === "idle" && (
+                      <button type="button" className="drawer__cancelLink" onClick={() => setCancelStep("confirm")}>
+                        Cancel this {done.booking ? "booking" : "order"}
+                      </button>
+                    )}
+                    {(cancelStep === "confirm" || cancelStep === "busy") && (
+                      <div className="drawer__cancelConfirm">
+                        <p>Cancel {done.id}? This works only until we start on it.</p>
+                        <div>
+                          <button type="button" className="btn btn--red btn--sm" onClick={cancelNow} disabled={cancelStep === "busy"}>
+                            {cancelStep === "busy" ? "Cancelling..." : "Yes, cancel"}
+                          </button>
+                          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setCancelStep("idle")} disabled={cancelStep === "busy"}>
+                            Keep it
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {cancelMsg && (
+                      <p className="drawer__error" role="alert">
+                        {cancelMsg}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="drawer__doneActions">
                   <button type="button" className="btn btn--red btn--sm" onClick={downloadReceipt} disabled={pdfBusy}>

@@ -25,6 +25,7 @@ export default function Footer() {
               <li><Link to={to("gallery")}>Gallery</Link></li>
               <li><Link to={to("testimonials")}>Reviews</Link></li>
               <li><Link to={to("contact")}>Contact</Link></li>
+              <li><Link to="/cancel-order">Cancel Order</Link></li>
             </ul>
           </div>
 

@@ -42,6 +42,8 @@ export interface AdminOrder {
   hasFrom: boolean;
   placedAt: string; // ISO
   updatedAt: string; // ISO
+  /** set when an order is cancelled: by the customer on the website or by the team in the panel */
+  cancelledBy?: "customer" | "team";
 }
 
 export interface AdminBooking {
@@ -59,6 +61,7 @@ export interface AdminBooking {
   hasFrom: boolean;
   placedAt: string;
   updatedAt: string;
+  cancelledBy?: "customer" | "team";
 }
 
 export interface ItemOverride {
@@ -470,7 +473,7 @@ export function recordOrder(
 }
 
 export function setOrderStatus(id: string, status: OrderStatus): void {
-  ordersStore.set(ordersStore.get().map((o) => (o.id === id ? { ...o, status, updatedAt: nowIso() } : o)));
+  ordersStore.set(ordersStore.get().map((o) => (o.id === id ? { ...o, status, updatedAt: nowIso(), cancelledBy: status === "cancelled" ? "team" : undefined } : o)));
 }
 
 export function deleteOrder(id: string): void {
@@ -488,11 +491,52 @@ export function recordBooking(
 }
 
 export function setBookingStatus(id: string, status: BookingStatus): void {
-  bookingsStore.set(bookingsStore.get().map((b) => (b.id === id ? { ...b, status, updatedAt: nowIso() } : b)));
+  bookingsStore.set(bookingsStore.get().map((b) => (b.id === id ? { ...b, status, updatedAt: nowIso(), cancelledBy: status === "cancelled" ? "team" : undefined } : b)));
 }
 
 export function deleteBooking(id: string): void {
   bookingsStore.set(bookingsStore.get().filter((b) => b.id !== id));
+}
+
+
+/* ---------- customer self-cancel (website) ---------- */
+
+export type CancelResult = "ok" | "already_cancelled" | "too_late" | "not_found" | "error";
+
+const last10 = (v: string) => v.replace(/\D/g, "").slice(-10);
+
+/**
+ * A customer cancels their own order / table booking with the order ID + the phone number used.
+ * Only works while it is still "new" (booking: "pending"). With Supabase this calls the
+ * `cancel_my_order` database function (see supabase/schema.sql) - customers never get read access.
+ */
+export async function cancelMyOrder(id: string, phone: string): Promise<CancelResult> {
+  const cleanId = id.trim().toUpperCase();
+  if (!cleanId || last10(phone).length < 10) return "not_found";
+
+  if (isRemote) {
+    try {
+      const res = await sb<string>("rpc/cancel_my_order", { method: "POST", body: { p_id: cleanId, p_phone: phone } });
+      return res === "ok" || res === "already_cancelled" || res === "too_late" || res === "not_found" ? res : "error";
+    } catch {
+      return "error";
+    }
+  }
+
+  // browser-only (demo) mode
+  const isBooking = cleanId.startsWith("TBL-");
+  const list: (AdminOrder | AdminBooking)[] = isBooking ? bookingsStore.get() : ordersStore.get();
+  const hit = list.find((x) => x.id === cleanId && last10(x.phone) === last10(phone));
+  if (!hit) return "not_found";
+  if (hit.status === "cancelled") return "already_cancelled";
+  if (hit.status !== (isBooking ? "pending" : "new")) return "too_late";
+  if (isBooking) setBookingStatus(hit.id, "cancelled");
+  else setOrderStatus(hit.id, "cancelled");
+  // mark who cancelled
+  const mark = <T extends { id: string }>(arr: T[]) => arr.map((x) => (x.id === hit.id ? { ...x, cancelledBy: "customer" as const } : x));
+  if (isBooking) void bookingsStore.set(mark(bookingsStore.get() as AdminBooking[]));
+  else void ordersStore.set(mark(ordersStore.get() as AdminOrder[]));
+  return "ok";
 }
 
 /* ---------- settings ---------- */

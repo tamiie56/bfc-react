@@ -164,6 +164,7 @@ export default function Bookings() {
                     <td data-label="Pre-order">{b.lines.length ? `${b.lines.length} item${b.lines.length > 1 ? "s" : ""}` : "-"}</td>
                     <td data-label="Status">
                       <Pill tone={b.status}>{bookingLabel(b.status)}</Pill>
+                      {b.status === "cancelled" && b.cancelledBy === "customer" && <small>by customer</small>}
                     </td>
                     <td className="adm-table__act" onClick={(e) => e.stopPropagation()}>
                       {step && (

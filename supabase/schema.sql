@@ -86,3 +86,52 @@ grant select                         on public.kv       to anon;
 grant select, insert, update, delete on public.orders   to authenticated;
 grant select, insert, update, delete on public.bookings to authenticated;
 grant select, insert, update         on public.kv       to authenticated;
+
+-- ---------- customer self-cancel ----------
+-- Customers can NOT read or edit orders directly. This one function lets them cancel their OWN
+-- order (needs the order ID + the phone number used) and only while it is still "new"
+-- (table bookings: still "pending"). Safe to run more than once.
+create or replace function public.cancel_my_order(p_id text, p_phone text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_id     text := upper(btrim(coalesce(p_id, '')));
+  v_digits text := right(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), 10);
+  v_row    record;
+  v_now    text := to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+begin
+  if v_id = '' or length(v_digits) < 10 then
+    return 'not_found';
+  end if;
+
+  if v_id like 'TBL-%' then
+    select * into v_row from public.bookings where id = v_id for update;
+    if not found or right(regexp_replace(coalesce(v_row.data->>'phone', ''), '\D', '', 'g'), 10) <> v_digits then
+      return 'not_found';
+    end if;
+    if v_row.data->>'status' = 'cancelled' then return 'already_cancelled'; end if;
+    if v_row.data->>'status' <> 'pending' then return 'too_late'; end if;
+    update public.bookings
+       set data = data || jsonb_build_object('status', 'cancelled', 'cancelledBy', 'customer', 'updatedAt', v_now)
+     where id = v_id;
+    return 'ok';
+  end if;
+
+  select * into v_row from public.orders where id = v_id for update;
+  if not found or right(regexp_replace(coalesce(v_row.data->>'phone', ''), '\D', '', 'g'), 10) <> v_digits then
+    return 'not_found';
+  end if;
+  if v_row.data->>'status' = 'cancelled' then return 'already_cancelled'; end if;
+  if v_row.data->>'status' <> 'new' then return 'too_late'; end if;
+  update public.orders
+     set data = data || jsonb_build_object('status', 'cancelled', 'cancelledBy', 'customer', 'updatedAt', v_now)
+   where id = v_id;
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.cancel_my_order(text, text) from public;
+grant execute on function public.cancel_my_order(text, text) to anon, authenticated;

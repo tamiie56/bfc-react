@@ -4121,3 +4121,43 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- customer cancel (order done screen) ---------- */
+.drawer__cancel {
+  margin-top: 0.9rem;
+  text-align: center;
+}
+.drawer__cancelLink {
+  background: none;
+  border: 0;
+  color: #b3261e;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.3rem;
+}
+.drawer__cancelConfirm {
+  border: 1.5px solid #f0c9c5;
+  background: #fff6f5;
+  border-radius: 12px;
+  padding: 0.8rem;
+}
+.drawer__cancelConfirm p {
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+.drawer__cancelConfirm div {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.drawer__cancelled {
+  margin: 0.9rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: #fdeceb;
+  color: #8f1d17;
+  text-align: center;
+}
