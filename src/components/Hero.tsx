@@ -9,10 +9,6 @@ import OpenStatus from "./OpenStatus";
 
 /** time one slide stays on screen before the whole hero moves on (ms) */
 const CYCLE_MS = 5800;
-/** time the photo strips take to swap (ms) - keep in sync with --move in the CSS */
-const MOVE_MS = 900;
-
-const pad = (n: number) => String(n).padStart(2, "0");
 
 export default function Hero() {
   const mediaRef = useParallax<HTMLDivElement>(0.3);
@@ -34,8 +30,6 @@ export default function Hero() {
 
   const style = {
     "--accent": current.accent,
-    "--move": `${MOVE_MS}ms`,
-    "--hold": `${CYCLE_MS - MOVE_MS}ms`,
   } as CSSProperties;
 
   return (
@@ -64,15 +58,6 @@ export default function Hero() {
         </h1>
 
         <div className="hero__now rise" style={delay(650)}>
-          <div className="hero__nowtop">
-            <span>Now serving</span>
-            <b>{pad(index + 1)}</b>
-            <i className="hero__nowbar">
-              <u key={index} />
-            </i>
-            <em>{pad(HERO_SLIDES.length)}</em>
-          </div>
-
           <h2 className="hero__nowtitle" key={`t${index}`}>
             {current.title.split(" ").map((word, w) => (
               <span className="hero__w" key={w}>

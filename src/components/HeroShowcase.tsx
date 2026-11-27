@@ -1,10 +1,6 @@
 import type { CSSProperties } from "react";
 import { HERO_SLIDES } from "../data/heroSlides";
 
-/** number of vertical strips the photo is cut into */
-const STRIPS = 7;
-const STRIP_IDS = Array.from({ length: STRIPS }, (_, i) => i);
-
 /** a fixed set of sparks (x offset in %, size in px, delay and duration in s) - no randomness during render */
 const SPARKS = [
   { x: 6, s: 5, d: 0, t: 5.2 },
@@ -23,8 +19,8 @@ interface Props {
 }
 
 /**
- * The photo of the current item. It is cut into vertical strips (like window blinds): the strips
- * of the new photo rise up one after another while the old strips lift away.
+ * The photo of the current item. The new photo is wiped in from the left to the right while the
+ * old one lifts away upwards.
  * Purely decorative, so it is hidden from screen readers.
  */
 export default function HeroShowcase({ index, prev }: Props) {
@@ -54,11 +50,7 @@ export default function HeroShowcase({ index, prev }: Props) {
             className={`hero__shot${i === index ? " is-on" : i === prev ? " is-prev" : ""}`}
             style={{ "--img": `url(${s.image})`, "--pos": s.focus } as CSSProperties}
           >
-            {STRIP_IDS.map((n) => (
-              <span className="hero__strip" key={n} style={{ "--s": n } as CSSProperties}>
-                <i />
-              </span>
-            ))}
+            <i />
           </div>
         ))}
       </div>
