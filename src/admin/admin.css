@@ -1957,3 +1957,82 @@ button.adm-list__row:hover {
   font-size: 0.84rem;
   font-weight: 700;
 }
+
+/* ---------- outlet tags / outlet-wise table ---------- */
+.adm-outlet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--a-ink);
+  background: #fff4d6;
+  border: 1px solid #f3d98a;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.adm-outlet svg {
+  color: var(--a-red);
+  font-size: 0.75rem;
+}
+.adm-outlet--big {
+  font-size: 0.95rem;
+  padding: 0.25rem 0.75rem;
+}
+.adm-table td.adm-table__act {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .adm-table td.adm-table__act {
+    justify-content: flex-start;
+  }
+  .adm-table td.adm-table__act .adm-btn {
+    width: auto;
+    flex: 1;
+  }
+}
+.adm-outlets {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.adm-outlets th,
+.adm-outlets td {
+  text-align: left;
+  padding: 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--a-line-2);
+}
+.adm-outlets th {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--a-muted);
+}
+.adm-outlets .r {
+  text-align: right;
+}
+.adm-outlets tbody tr {
+  cursor: pointer;
+}
+.adm-outlets tbody tr:hover {
+  background: #fbf8f5;
+}
+.adm-outlets__new {
+  display: inline-block;
+  min-width: 1.4rem;
+  text-align: center;
+  background: var(--a-red);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.05rem 0.45rem;
+}
+.adm-outlets__scroll {
+  max-height: 460px;
+  overflow: auto;
+}

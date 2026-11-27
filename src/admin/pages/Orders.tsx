@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { FaClipboardList, FaDownload, FaPhoneAlt, FaPrint, FaSearch, FaTrashAlt } from "react-icons/fa";
+import { FaBan, FaClipboardList, FaDownload, FaMapMarkerAlt, FaPhoneAlt, FaPrint, FaSearch, FaTrashAlt } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
+import { AREAS } from "../../data/content";
 import { addDays, ago, csvEscape, dhakaDay, downloadFile, fmtDateTime, fmtTime, itemCount, money, todayDhaka } from "../format";
 import { printReceipt } from "../receipt";
 import { ORDER_STATUSES, nextOrderStep, orderLabel } from "../status";
@@ -44,6 +45,7 @@ export default function Orders() {
   const [type, setType] = useState("all");
   const [query, setQuery] = useState("");
   const { ask, dialog } = useConfirm();
+  const outlet = params.get("outlet") ?? "all";
 
   const rawStatus = params.get("status");
   const status = (ORDER_STATUSES as string[]).includes(rawStatus ?? "") ? (rawStatus as OrderStatus) : "all";
@@ -56,6 +58,17 @@ export default function Orders() {
         const n = new URLSearchParams(p);
         if (s === "all") n.delete("status");
         else n.set("status", s);
+        return n;
+      },
+      { replace: true }
+    );
+
+  const setOutlet = (a: string) =>
+    setParams(
+      (p) => {
+        const n = new URLSearchParams(p);
+        if (a === "all") n.delete("outlet");
+        else n.set("outlet", a);
         return n;
       },
       { replace: true }
@@ -78,21 +91,38 @@ export default function Orders() {
     return orders.filter((o) => {
       if (!inPeriod(o, period)) return false;
       if (type !== "all" && o.type !== type) return false;
+      if (outlet !== "all" && o.area !== outlet) return false;
       if (!q) return true;
       return (
         o.id.toLowerCase().includes(q) ||
         o.name.toLowerCase().includes(q) ||
+        o.area.toLowerCase().includes(q) ||
         o.phone.replace(/\D/g, "").includes(q.replace(/\D/g, "") || "\u0000") ||
         o.phone.includes(q)
       );
     });
-  }, [orders, period, type, query]);
+  }, [orders, period, type, query, outlet]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: base.length };
     ORDER_STATUSES.forEach((s) => (c[s] = base.filter((o) => o.status === s).length));
     return c;
   }, [base]);
+
+  // how many live orders each outlet has in the chosen period (shown inside the outlet dropdown)
+  const outletCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    orders.forEach((o) => {
+      if (!inPeriod(o, period) || o.status === "cancelled") return;
+      if (type !== "all" && o.type !== type) return;
+      c[o.area] = (c[o.area] ?? 0) + 1;
+    });
+    return c;
+  }, [orders, period, type]);
+  const knownAreas = useMemo(() => {
+    const extra = Array.from(new Set(orders.map((o) => o.area))).filter((a) => a && !AREAS.includes(a));
+    return [...AREAS, ...extra];
+  }, [orders]);
 
   const rows = status === "all" ? base : base.filter((o) => o.status === status);
   const totalShown = rows.filter((o) => o.status !== "cancelled").reduce((n, o) => n + o.total, 0);
@@ -107,7 +137,7 @@ export default function Orders() {
   const cancel = (o: AdminOrder) =>
     ask({
       title: `Cancel ${o.id}?`,
-      text: `${o.name}'s order will be marked as cancelled and won't count towards revenue.`,
+      text: `${o.name}'s order (${o.area}) will be marked as cancelled and won't count towards revenue.${o.status === "completed" ? " It was already completed - only do this for a mistake / refund." : ""}`,
       confirmLabel: "Cancel order",
       danger: true,
       onYes: () => {
@@ -130,7 +160,7 @@ export default function Orders() {
     });
 
   const exportCsv = () => {
-    const head = ["Order ID", "Placed at", "Type", "Status", "Name", "Phone", "Area", "Address", "Items", "Subtotal", "Delivery", "Total", "Note"];
+    const head = ["Order ID", "Placed at", "Type", "Status", "Name", "Phone", "Outlet", "Address", "Items", "Subtotal", "Delivery", "Total", "Note"];
     const lines = rows.map((o) =>
       [
         o.id,
@@ -170,6 +200,15 @@ export default function Orders() {
           <FaSearch aria-hidden />
           <input placeholder="Search order ID, name or phone" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search orders" />
         </label>
+        <select className="adm-select" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-label="Outlet">
+          <option value="all">All outlets ({knownAreas.length})</option>
+          {knownAreas.map((a) => (
+            <option key={a} value={a}>
+              {a}
+              {outletCounts[a] ? ` (${outletCounts[a]})` : ""}
+            </option>
+          ))}
+        </select>
         <select className="adm-select" value={period} onChange={(e) => setPeriod(e.target.value as Period)} aria-label="Period">
           {PERIODS.map((p) => (
             <option key={p.id} value={p.id}>
@@ -211,6 +250,7 @@ export default function Orders() {
             <thead>
               <tr>
                 <th>Order</th>
+                <th>Outlet</th>
                 <th>Customer</th>
                 <th>Type</th>
                 <th className="r">Items</th>
@@ -229,6 +269,11 @@ export default function Orders() {
                       <small>
                         {fmtTime(o.placedAt)} - {ago(o.placedAt)}
                       </small>
+                    </td>
+                    <td data-label="Outlet">
+                      <span className="adm-outlet">
+                        <FaMapMarkerAlt aria-hidden /> {o.area}
+                      </span>
                     </td>
                     <td data-label="Customer">
                       <b>{o.name}</b>
@@ -250,6 +295,11 @@ export default function Orders() {
                           {step.label}
                         </button>
                       )}
+                      {o.status !== "cancelled" && (
+                        <button className="adm-btn adm-btn--sm adm-btn--ghost adm-btn--text-danger" onClick={() => cancel(o)} title="Cancel this order">
+                          <FaBan aria-hidden /> Cancel
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -265,6 +315,9 @@ export default function Orders() {
           sub={
             <>
               <Pill tone={open.status}>{orderLabel(open.status, open.type)}</Pill> <span>{open.type}</span>
+              <span className="adm-outlet">
+                <FaMapMarkerAlt aria-hidden /> {open.area}
+              </span>
             </>
           }
           onClose={() => setOpen(null)}
@@ -275,8 +328,8 @@ export default function Orders() {
                   {nextOrderStep(open)!.label}
                 </button>
               )}
-              {(open.status === "new" || open.status === "preparing" || open.status === "ready") && (
-                <button className="adm-btn adm-btn--ghost" onClick={() => cancel(open)}>
+              {open.status !== "cancelled" && (
+                <button className="adm-btn adm-btn--danger" onClick={() => cancel(open)}>
                   Cancel order
                 </button>
               )}
@@ -298,7 +351,11 @@ export default function Orders() {
                 <FaPhoneAlt aria-hidden /> {open.phone}
               </a>
             </p>
-            <p>{open.area}</p>
+            <p>
+              <span className="adm-outlet adm-outlet--big">
+                <FaMapMarkerAlt aria-hidden /> Outlet: {open.area}
+              </span>
+            </p>
             {open.address && <p>{open.address}</p>}
             {open.note && <p className="adm-note">&ldquo;{open.note}&rdquo;</p>}
           </section>

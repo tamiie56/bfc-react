@@ -81,16 +81,16 @@ function useArrivalAlerts() {
     const orderNotice = (o: (typeof orders)[number]): Notice => ({
       id: o.id,
       kind: "order",
-      title: `New order ${o.id} - ${o.name}`,
-      sub: `${o.type} - ${money(o.total)}`,
+      title: `New order ${o.id} - ${o.area}`,
+      sub: `${o.name} - ${o.type} - ${money(o.total)}`,
       at: o.placedAt,
       read: false,
     });
     const bookingNotice = (b: (typeof bookings)[number]): Notice => ({
       id: b.id,
       kind: "booking",
-      title: `New table booking ${b.id} - ${b.name}`,
-      sub: `${fmtDay(b.date)}, ${fmtClock(b.time)} - ${b.guests} guests`,
+      title: `New table booking ${b.id} - ${b.area}`,
+      sub: `${b.name} - ${fmtDay(b.date)}, ${fmtClock(b.time)} - ${b.guests} guests`,
       at: b.placedAt,
       read: false,
     });

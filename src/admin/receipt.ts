@@ -27,8 +27,8 @@ export function printReceipt(o: AdminOrder): void {
   .big{font-size:15px;font-weight:700}
 </style></head><body>
 <h1>BFC</h1><p>Best Fried Chicken</p><p>${esc(SITE.phone)}</p><hr>
-<p class="big">${esc(o.id)}</p><p>${esc(o.type)}</p><p>${esc(fmtDateTime(o.placedAt))}</p><hr>
-<div><span class="b">${esc(o.name)}</span><br>${esc(o.phone)}<br>${esc(o.area)}${o.address ? "<br>" + esc(o.address) : ""}</div>
+<p class="big">${esc(o.id)}</p><p class="big">OUTLET: ${esc(o.area)}</p><p>${esc(o.type)}</p><p>${esc(fmtDateTime(o.placedAt))}</p><hr>
+<div><span class="b">${esc(o.name)}</span><br>${esc(o.phone)}${o.address ? "<br>" + esc(o.address) : ""}</div>
 ${o.note ? `<hr><div><span class="b">Note:</span> ${esc(o.note)}</div>` : ""}
 <hr><table>${rows}</table><hr>
 <table>

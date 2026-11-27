@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { FaArrowDown, FaArrowUp, FaCalendarCheck, FaClipboardList, FaFire, FaMoneyBillWave, FaMagic } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
+import { AREAS } from "../../data/content";
 import { makeDemoData } from "../demo";
 import { addDays, ago, dhakaDay, fmtClock, fmtDay, itemCount, money, todayDhaka } from "../format";
 import { orderLabel } from "../status";
@@ -71,7 +72,22 @@ export default function Dashboard() {
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
       .slice(0, 4);
 
+    // outlet-wise numbers for today (all 24 outlets, busiest first)
+    const outletMap = new Map<string, { orders: number; revenue: number; fresh: number }>();
+    AREAS.forEach((a) => outletMap.set(a, { orders: 0, revenue: 0, fresh: 0 }));
+    orders.forEach((o) => {
+      const e = outletMap.get(o.area) ?? { orders: 0, revenue: 0, fresh: 0 };
+      if (o.status === "new") e.fresh += 1; // waiting orders from any day
+      if (dhakaDay(o.placedAt) === today && o.status !== "cancelled") {
+        e.orders += 1;
+        e.revenue += o.total;
+      }
+      outletMap.set(o.area, e);
+    });
+    const outlets = [...outletMap.entries()].sort((a, b) => b[1].fresh - a[1].fresh || b[1].orders - a[1].orders || a[0].localeCompare(b[0]));
+
     return {
+      outlets,
       revenueToday: sumDay(today),
       revenueYesterday: sumDay(yesterday),
       ordersToday: countDay(today),
@@ -241,6 +257,39 @@ export default function Dashboard() {
         </section>
       </div>
 
+      <section className="adm-card">
+        <header className="adm-card__head">
+          <div>
+            <h3>Outlet-wise orders - today</h3>
+            <p className="adm-muted">Which outlet each order belongs to. Click a row to see only that outlet's orders.</p>
+          </div>
+        </header>
+        <div className="adm-outlets__scroll">
+          <table className="adm-outlets">
+            <thead>
+              <tr>
+                <th>Outlet</th>
+                <th className="r">New</th>
+                <th className="r">Orders today</th>
+                <th className="r">Revenue today</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.outlets.map(([name, v]) => (
+                <tr key={name} onClick={() => navigate(`/admin/orders?outlet=${encodeURIComponent(name)}`)}>
+                  <td>
+                    <b>{name}</b>
+                  </td>
+                  <td className="r">{v.fresh > 0 ? <span className="adm-outlets__new">{v.fresh}</span> : "-"}</td>
+                  <td className="r">{v.orders || "-"}</td>
+                  <td className="r">{v.revenue ? money(v.revenue) : "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <div className="adm-grid adm-grid--2">
         <section className="adm-card">
           <header className="adm-card__head">
@@ -259,7 +308,7 @@ export default function Dashboard() {
                     <span className="adm-list__main">
                       <b>{o.name}</b>
                       <small>
-                        {o.id} - {o.type} - {itemCount(o.lines)} {itemCount(o.lines) === 1 ? "item" : "items"} - {ago(o.placedAt)}
+                        {o.id} - {o.area} - {o.type} - {itemCount(o.lines)} {itemCount(o.lines) === 1 ? "item" : "items"} - {ago(o.placedAt)}
                       </small>
                     </span>
                     <span className="adm-list__end">

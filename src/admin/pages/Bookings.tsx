@@ -41,7 +41,7 @@ export default function Bookings() {
         if (when === "today" && b.date !== today) return false;
         if (when === "past" && b.date >= today) return false;
         if (!q) return true;
-        return b.id.toLowerCase().includes(q) || b.name.toLowerCase().includes(q) || b.phone.includes(q);
+        return b.id.toLowerCase().includes(q) || b.area.toLowerCase().includes(q) || b.name.toLowerCase().includes(q) || b.phone.includes(q);
       })
       .sort((a, b) => (when === "past" ? (b.date + b.time).localeCompare(a.date + a.time) : (a.date + a.time).localeCompare(b.date + b.time)));
   }, [bookings, when, query, today]);
@@ -129,6 +129,7 @@ export default function Bookings() {
             <thead>
               <tr>
                 <th>Booking</th>
+                <th>Outlet</th>
                 <th>Customer</th>
                 <th>Date &amp; time</th>
                 <th className="r">Guests</th>
@@ -145,6 +146,9 @@ export default function Bookings() {
                     <td data-label="Booking">
                       <b>{b.id}</b>
                       <small>{ago(b.placedAt)}</small>
+                    </td>
+                    <td data-label="Outlet">
+                      <b>{b.area}</b>
                     </td>
                     <td data-label="Customer">
                       <b>{b.name}</b>
