@@ -4247,6 +4247,99 @@ button {
   100% { background-position: 0 0; }
 }
 
+/* ---------- hero: slow-motion sauce drip & crunch ---------- */
+.hero__shots {
+  --sp: 0;
+}
+
+.hero__sauce {
+  --sauce: color-mix(in srgb, var(--accent) 72%, #4a0d00);
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hero__sauceCap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 7%;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sauce) 70%, #fff) 0, var(--sauce) 35%, var(--sauce));
+  opacity: 0.94;
+  animation: sauceCap 1.6s cubic-bezier(0.3, 0.6, 0.2, 1) 0.5s both;
+  transform-origin: top;
+}
+
+/* each drip grows slowly, then a heavy drop swells at its tip */
+.hero__drip {
+  position: absolute;
+  top: 5%;
+  left: var(--x);
+  width: var(--w);
+  height: 0;
+  border-radius: 0 0 99px 99px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sauce) 70%, #fff) 0, var(--sauce) 30%, var(--sauce) 70%, color-mix(in srgb, var(--sauce) 70%, #000) 100%);
+  opacity: 0.94;
+  animation: sauceRun var(--t) cubic-bezier(0.4, 0.05, 0.3, 1) var(--d) both;
+}
+
+.hero__drip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.35em;
+  width: 190%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--sauce) 60%, #fff) 0 12%, var(--sauce) 45%);
+}
+
+.hero__crumbs {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.hero__crumbs i {
+  position: absolute;
+  width: var(--s);
+  height: calc(var(--s) * 0.78);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  border-radius: 46% 54% 40% 60% / 58% 42% 58% 42%;
+  background: radial-gradient(circle at 30% 30%, #f6c35c, #c9811c 70%, #8a4a0c);
+  opacity: 0;
+  animation: crumbFly 2.8s cubic-bezier(0.2, 0.7, 0.3, 1) var(--cd) both;
+}
+
+.hero__crumbs i.is-spice {
+  background: radial-gradient(circle at 30% 30%, #ff7a52, #c21a0c 75%);
+}
+
+@keyframes sauceCap {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes sauceRun {
+  0% { height: 0; }
+  100% { height: calc(var(--len) * (1 + var(--sp, 0) * 0.9)); }
+}
+
+/* slow motion: out, hang in the air for a moment, then fall and fade. Scrolling throws them further. */
+@keyframes crumbFly {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(0.3); }
+  12% { opacity: 1; }
+  55% { opacity: 1; transform: translate(calc(var(--dx) * (var(--bw) / 100) * (1 + var(--sp, 0) * 0.5)), calc(var(--dy) * (var(--bw) / 100) * (1 + var(--sp, 0) * 0.5))) rotate(calc(var(--rot) * 0.6)) scale(1); }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * (var(--bw) / 100) * 1.12 * (1 + var(--sp, 0) * 0.5)), calc((var(--dy) + var(--fall)) * (var(--bw) / 100) * (1 + var(--sp, 0) * 0.5))) rotate(var(--rot)) scale(0.8); }
+}
+
 @media (max-width: 991px) {
   .hero {
     flex-direction: column;
@@ -4265,5 +4358,12 @@ button {
     right: auto;
     margin: 0.5rem auto 3.5rem;
     transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__sauce,
+  .hero__crumbs {
+    display: none;
   }
 }
