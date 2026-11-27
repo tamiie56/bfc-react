@@ -9,7 +9,7 @@ interface Props {
 
 /**
  * The current item on a round plate (same look as the "What kind of Foods we serve" section).
- * The new photo is wiped in from the left to the right while the old one lifts away upwards.
+ * The new photo is feathered in from the left to the right while the old one lifts upwards and melts away; the tag slides in/out diagonally.
  * Purely decorative, so it is hidden from screen readers.
  */
 export default function HeroShowcase({ index, prev }: Props) {
@@ -29,6 +29,11 @@ export default function HeroShowcase({ index, prev }: Props) {
         ))}
       </div>
 
+      {prev !== null && (
+        <span key={`o${prev}`} className="hero__ribbon is-out">
+          {HERO_SLIDES[prev].tag}
+        </span>
+      )}
       <span key={`r${index}`} className="hero__ribbon">
         {slide.tag}
       </span>
