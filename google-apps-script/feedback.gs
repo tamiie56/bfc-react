@@ -35,7 +35,10 @@ function doPost(e) {
       sheet.setFrozenRows(1);
       sheet.getRange("D:D").setNumberFormat("@"); // keep the leading 0 of phone numbers
     }
-    sheet.appendRow([new Date(), name, email, phone, message]);
+    // the phone cell is always plain text, so 01791136081 keeps its leading 0
+    var row = sheet.getLastRow() + 1;
+    sheet.getRange(row, 4).setNumberFormat("@");
+    sheet.getRange(row, 1, 1, HEADERS.length).setValues([[new Date(), name, email, phone, message]]);
 
     return reply({ ok: true });
   } catch (err) {
