@@ -7,54 +7,56 @@ import fries from "../assets/images/g-fries.jpg";
 interface Pick {
   title: string;
   tag: string;
-  /** big outlined word behind the plate */
+  /** big outlined word behind the frame */
   word: string;
-  /** colour of the glow, ring, sparks and sticker */
+  /** colour of the glow, frame, sparks and ribbon */
   accent: string;
   image: string;
+  /** which part of the photo stays visible inside the tall frame */
+  focus: string;
 }
 
 /** The best items shown in the hero, one after another. */
 const PICKS: Pick[] = [
-  { title: "Sauce-Dipped Crispy Chicken", tag: "Best Seller", word: "Crunchy", accent: "#ff7a1a", image: drumstick },
-  { title: "Golden Fries", tag: "Crowd Favourite", word: "Golden", accent: "#ffc80a", image: fries },
-  { title: "Crispy Chicken Pieces", tag: "Signature Taste", word: "Juicy", accent: "#ff4d2e", image: crispy },
-  { title: "BFC Combo Meal", tag: "Best Value", word: "Combo", accent: "#f0a30a", image: combo },
+  { title: "Sauce-Dipped Crispy Chicken", tag: "Best Seller", word: "Crunchy", accent: "#ff7a1a", image: drumstick, focus: "50% 30%" },
+  { title: "Golden Fries", tag: "Crowd Favourite", word: "Golden", accent: "#ffc80a", image: fries, focus: "50% 50%" },
+  { title: "Crispy Chicken Pieces", tag: "Signature Taste", word: "Juicy", accent: "#ff4d2e", image: crispy, focus: "30% 50%" },
+  { title: "BFC Combo Meal", tag: "Best Value", word: "Combo", accent: "#f0a30a", image: combo, focus: "50% 50%" },
 ];
 
-/** how long each item stays on screen once it has arrived (ms) */
+/** how long each item stays on screen once it has been revealed (ms) */
 const HOLD_MS = 4200;
-/** length of the roll-in / roll-out animations (ms) - keep in sync with the CSS */
-const IN_MS = 1000;
+/** length of the reveal / wipe-out animations (ms) - keep in sync with the CSS */
+const IN_MS = 1100;
 const OUT_MS = 700;
 
-const ORBIT_TEXT = "BEST FRIED CHICKEN \u2605 SINCE 2002 \u2605 BEST FRIED CHICKEN \u2605 SINCE 2002 \u2605 ";
+const STAMP_TEXT = "BEST FRIED CHICKEN \u2022 SINCE 2002 \u2022 ";
 
 /** a fixed set of sparks (x offset in %, size in px, delay and duration in s) - no randomness during render */
 const SPARKS = [
   { x: 8, s: 5, d: 0, t: 5.2 },
-  { x: 18, s: 3, d: 1.4, t: 4.4 },
-  { x: 27, s: 6, d: 0.6, t: 6 },
-  { x: 36, s: 4, d: 2.3, t: 4.8 },
-  { x: 46, s: 3, d: 0.9, t: 5.6 },
-  { x: 55, s: 5, d: 3.1, t: 4.6 },
-  { x: 64, s: 4, d: 1.8, t: 5.8 },
-  { x: 73, s: 6, d: 0.3, t: 5 },
-  { x: 82, s: 3, d: 2.7, t: 4.2 },
-  { x: 91, s: 5, d: 1.1, t: 6.2 },
+  { x: 20, s: 3, d: 1.4, t: 4.4 },
+  { x: 31, s: 6, d: 0.6, t: 6 },
+  { x: 44, s: 4, d: 2.3, t: 4.8 },
+  { x: 57, s: 3, d: 0.9, t: 5.6 },
+  { x: 68, s: 5, d: 3.1, t: 4.6 },
+  { x: 79, s: 4, d: 1.8, t: 5.8 },
+  { x: 92, s: 6, d: 0.3, t: 5 },
 ];
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
 /**
- * A plate that rolls into the hero, holds for a few seconds while a ring fills up around it,
- * rolls out and is replaced by the next best item. Purely decorative, so it is hidden from
- * screen readers.
+ * An arch-shaped photo frame: the item is revealed from the bottom up, holds for a few seconds
+ * while a line fills beside it, then is wiped away upwards and replaced by the next one.
+ * Purely decorative, so it is hidden from screen readers.
  */
 export default function HeroShowcase() {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<"in" | "out">("in");
   const stageRef = useRef<HTMLDivElement>(null);
 
-  // roll in -> hold -> roll out -> next item
+  // reveal -> hold -> wipe out -> next item
   useEffect(() => {
     const t = window.setTimeout(
       () => {
@@ -70,7 +72,7 @@ export default function HeroShowcase() {
     return () => window.clearTimeout(t);
   }, [phase, index]);
 
-  // the plate leans a little towards the mouse (desktop only)
+  // the frame leans a little towards the mouse (desktop only)
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
@@ -95,6 +97,7 @@ export default function HeroShowcase() {
 
   const pick = PICKS[index];
   const style = { "--accent": pick.accent, "--hold": `${HOLD_MS}ms`, "--in": `${IN_MS}ms` } as CSSProperties;
+  let letter = 0;
 
   return (
     <div className="hero__stage" ref={stageRef} style={style} aria-hidden="true">
@@ -113,42 +116,54 @@ export default function HeroShowcase() {
         ))}
       </div>
 
-      <svg className="hero__orbit" viewBox="0 0 200 200">
-        <defs>
-          <path id="heroOrbitPath" d="M 100,100 m -92,0 a 92,92 0 1,1 184,0 a 92,92 0 1,1 -184,0" />
-        </defs>
-        <text>
-          <textPath href="#heroOrbitPath" textLength="575" lengthAdjust="spacing">
-            {ORBIT_TEXT}
-          </textPath>
-        </text>
-      </svg>
-
-      <svg key={`p${index}`} className={`hero__progress is-${phase}`} viewBox="0 0 200 200">
-        <circle className="hero__progress-track" cx="100" cy="100" r="80" />
-        <circle className="hero__progress-bar" cx="100" cy="100" r="80" />
-      </svg>
-
       <div className="hero__tilt">
-        <div key={index} className={`hero__plate is-${phase}`}>
-          <div className="hero__float">
-            <img src={pick.image} alt="" draggable={false} />
-          </div>
+        {/* outline of the arch, a little off to the side */}
+        <span key={`o${index}`} className={`hero__outline is-${phase}`} />
+
+        <div key={`a${index}`} className={`hero__arch is-${phase}`}>
+          <img src={pick.image} alt="" draggable={false} style={{ objectPosition: pick.focus }} />
         </div>
 
-        <span key={`s${index}`} className={`hero__shock is-${phase}`} />
-        <span key={`t${index}`} className={`hero__sticker is-${phase}`}>
+        <span key={`r${index}`} className={`hero__ribbon is-${phase}`}>
           {pick.tag}
         </span>
+
+        <span key={`l${index}`} className={`hero__line is-${phase}`}>
+          <i />
+        </span>
+
+        <span className="hero__count">
+          <b>{pad(index + 1)}</b>/{pad(PICKS.length)}
+        </span>
+
+        <svg className="hero__stamp" viewBox="0 0 120 120">
+          <defs>
+            <path id="heroStampPath" d="M 60,60 m -46,0 a 46,46 0 1,1 92,0 a 46,46 0 1,1 -92,0" />
+          </defs>
+          <circle cx="60" cy="60" r="58" className="hero__stamp-bg" />
+          <text className="hero__stamp-ring">
+            <textPath href="#heroStampPath" textLength="283" lengthAdjust="spacing">
+              {STAMP_TEXT}
+            </textPath>
+          </text>
+          <text x="60" y="71" textAnchor="middle" className="hero__stamp-core">
+            BFC
+          </text>
+        </svg>
       </div>
 
       <div key={`c${index}`} className={`hero__caption is-${phase}`}>
-        <strong>{pick.title}</strong>
-        <span className="hero__dots">
-          {PICKS.map((p, i) => (
-            <i key={p.title} className={i === index ? "is-on" : ""} />
+        <strong>
+          {pick.title.split(" ").map((word, w) => (
+            <span className="hero__w" key={w}>
+              {word.split("").map((ch) => (
+                <span className="hero__ch" key={letter} style={{ "--i": letter++ } as CSSProperties}>
+                  {ch}
+                </span>
+              ))}
+            </span>
           ))}
-        </span>
+        </strong>
       </div>
     </div>
   );

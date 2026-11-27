@@ -4020,7 +4020,7 @@ button {
   }
 }
 
-/* ---------- hero: best-item showcase (rolls in, holds while a ring fills, rolls out) ---------- */
+/* ---------- hero: best-item showcase (arch frame: reveal from the bottom, hold, wipe up) ---------- */
 .hero__bfc {
   /* slow shine sweeping across the big BFC letters */
   background: linear-gradient(100deg, var(--yellow) 42%, #fff6c9 50%, var(--yellow) 58%) 100% 0 / 260% 100%;
@@ -4036,13 +4036,13 @@ button {
   --my: 0;
   position: absolute;
   top: 50%;
-  right: clamp(1rem, 6vw, 7rem);
+  right: clamp(2rem, 8vw, 9rem);
   z-index: 1;
-  width: clamp(300px, 36vw, 500px);
-  aspect-ratio: 1;
+  width: clamp(250px, 28vw, 400px);
+  aspect-ratio: 5 / 6;
   display: grid;
   place-items: center;
-  transform: translateY(-54%);
+  transform: translateY(-48%);
   pointer-events: none;
 }
 
@@ -4052,10 +4052,10 @@ button {
 
 /* soft glow in the colour of the current item */
 .hero__aura {
-  width: 150%;
+  width: 170%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 38%, transparent), transparent 62%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 34%, transparent), transparent 62%);
   filter: blur(30px);
 }
 
@@ -4067,7 +4067,7 @@ button {
   animation: heroFadeOut 0.7s ease both;
 }
 
-/* big outlined word that slides behind the plate */
+/* big outlined word behind the frame, it settles down from slightly bigger */
 .hero__word {
   z-index: 0;
   font-family: var(--font-head);
@@ -4083,11 +4083,11 @@ button {
 }
 
 .hero__word.is-in {
-  animation: heroWordIn 1.1s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  animation: heroWordIn 1.2s cubic-bezier(0.22, 0.8, 0.3, 1) both;
 }
 
 .hero__word.is-out {
-  animation: heroWordOut 0.7s ease-in both;
+  animation: heroWordOut 0.6s ease-in both;
 }
 
 .hero__sparks {
@@ -4106,77 +4106,29 @@ button {
   animation: heroSpark linear infinite;
 }
 
-.hero__orbit {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  animation: heroSpin 32s linear infinite;
-}
-
-.hero__orbit text {
-  font-family: var(--font-head);
-  font-size: 8.5px;
-  font-weight: 500;
-  letter-spacing: 3px;
-  fill: rgba(255, 255, 255, 0.82);
-}
-
-.hero__progress {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  transform: rotate(-90deg);
-}
-
-.hero__progress circle {
-  fill: none;
-  stroke-width: 2.4;
-}
-
-.hero__progress-track {
-  stroke: rgba(255, 255, 255, 0.14);
-}
-
-.hero__progress-bar {
-  stroke: var(--accent);
-  stroke-linecap: round;
-  stroke-dasharray: 503;
-  stroke-dashoffset: 503;
-  filter: drop-shadow(0 0 6px var(--accent));
-}
-
-.hero__progress.is-in .hero__progress-bar {
-  animation: heroProgress var(--hold) linear var(--in) forwards;
-}
-
-.hero__progress.is-out {
-  animation: heroFadeOut 0.4s ease both;
-}
-
 .hero__tilt {
   position: relative;
-  width: 72%;
-  aspect-ratio: 1;
-  transform: translate3d(calc(var(--mx) * 16px), calc(var(--my) * 12px), 0) rotate(calc(var(--mx) * 2.5deg));
+  width: 78%;
+  height: 100%;
+  transform: translate3d(calc(var(--mx) * 14px), calc(var(--my) * 10px), 0);
   transition: transform 0.35s ease-out;
 }
 
-.hero__plate {
-  width: 100%;
-  height: 100%;
+.hero__tilt > * {
+  position: absolute;
 }
 
-.hero__float {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
+/* the arch itself */
+.hero__arch {
+  inset: 0;
   overflow: hidden;
-  border: 6px solid var(--accent);
-  box-shadow: 0 34px 70px rgba(0, 0, 0, 0.6), 0 0 0 10px color-mix(in srgb, var(--accent) 16%, transparent);
-  animation: heroFloat 4.2s ease-in-out infinite;
+  border-radius: 999px 999px 26px 26px;
+  border: 4px solid var(--accent);
+  background: #1b0f0a;
+  box-shadow: 0 34px 70px rgba(0, 0, 0, 0.6);
 }
 
-.hero__float img {
+.hero__arch img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -4184,150 +4136,228 @@ button {
   user-select: none;
 }
 
-.hero__plate.is-in {
-  animation: heroRollIn 1s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+.hero__arch.is-in {
+  animation: heroReveal 1.1s cubic-bezier(0.77, 0, 0.18, 1) both;
 }
 
-.hero__plate.is-out {
-  animation: heroRollOut 0.7s cubic-bezier(0.55, 0, 0.8, 0.4) both;
+.hero__arch.is-in img {
+  animation: heroZoomIn 1.1s cubic-bezier(0.22, 0.8, 0.3, 1) both, heroDrift 6s ease-in-out 1.1s infinite alternate;
 }
 
-/* ring that bursts outwards when the plate lands */
-.hero__shock {
-  position: absolute;
+.hero__arch.is-out {
+  animation: heroWipe 0.7s cubic-bezier(0.77, 0, 0.18, 1) both;
+}
+
+/* thin copy of the arch that trails behind */
+.hero__outline {
   inset: 0;
-  border-radius: 50%;
-  border: 3px solid var(--accent);
-  opacity: 0;
+  border-radius: 999px 999px 26px 26px;
+  border: 2px solid var(--accent);
+  opacity: 0.7;
+  transform: translate(7%, 4%);
 }
 
-.hero__shock.is-in {
-  animation: heroShock 0.9s ease-out 0.7s both;
+.hero__outline.is-in {
+  animation: heroOutlineIn 1s cubic-bezier(0.22, 0.8, 0.3, 1) 0.25s both;
 }
 
-/* round sticker that pops onto the plate */
-.hero__sticker {
-  position: absolute;
-  top: 2%;
-  left: -6%;
-  display: grid;
-  place-items: center;
-  width: clamp(76px, 8.5vw, 108px);
-  aspect-ratio: 1;
-  padding: 0.6rem;
-  border-radius: 50%;
+.hero__outline.is-out {
+  animation: heroFadeOut 0.4s ease both;
+}
+
+/* tag ribbon sliding in over the bottom-left corner */
+.hero__ribbon {
+  left: -9%;
+  bottom: 14%;
+  padding: 0.55rem 1.2rem 0.5rem;
   background: var(--accent);
   color: #1b0f0a;
   font-family: var(--font-head);
-  font-size: clamp(0.72rem, 1.05vw, 0.95rem);
+  font-size: clamp(0.78rem, 1.1vw, 0.98rem);
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 1px;
-  text-align: center;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 0 0 3px rgba(255, 255, 255, 0.35);
-  transform: rotate(-14deg);
+  white-space: nowrap;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.4);
 }
 
-.hero__sticker.is-in {
-  animation: heroPop 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 1s both;
+.hero__ribbon.is-in {
+  animation: heroRibbonIn 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) 1s both;
 }
 
-.hero__sticker.is-out {
+.hero__ribbon.is-out {
   animation: heroFadeOut 0.3s ease both;
 }
 
+/* vertical line that fills while the item is held */
+.hero__line {
+  top: 12%;
+  right: -9%;
+  width: 3px;
+  height: 70%;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.hero__line i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+.hero__line.is-in i {
+  animation: heroFill var(--hold) linear var(--in) forwards;
+}
+
+.hero__line.is-out {
+  animation: heroFadeOut 0.3s ease both;
+}
+
+.hero__count {
+  top: 8%;
+  right: -16%;
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.7);
+  writing-mode: vertical-rl;
+}
+
+.hero__count b {
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* little rotating stamp over the top-left of the arch */
+.hero__stamp {
+  top: 4%;
+  left: -13%;
+  width: clamp(72px, 7vw, 100px);
+  height: auto;
+  animation: heroSpin 18s linear infinite;
+}
+
+.hero__stamp-bg {
+  fill: #1b0f0a;
+  stroke: var(--yellow);
+  stroke-width: 2;
+}
+
+.hero__stamp-ring {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  fill: #fff;
+}
+
+.hero__stamp-core {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  fill: var(--yellow);
+}
+
+/* item name, letter by letter */
 .hero__caption {
   position: absolute;
   top: 100%;
   left: 50%;
   width: max-content;
-  max-width: 100%;
-  margin-top: -0.6rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
+  max-width: 120%;
+  margin-top: 1.1rem;
   text-align: center;
   transform: translateX(-50%);
 }
 
 .hero__caption strong {
+  display: block;
   font-family: var(--font-head);
-  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  font-size: clamp(1.15rem, 1.9vw, 1.55rem);
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
-.hero__dots {
-  display: flex;
-  gap: 0.45rem;
+.hero__w {
+  display: inline-block;
+  margin: 0 0.18em;
+  overflow: hidden;
+  vertical-align: top;
 }
 
-.hero__dots i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  transition: all 0.4s var(--ease);
+.hero__ch {
+  display: inline-block;
 }
 
-.hero__dots i.is-on {
-  width: 26px;
-  border-radius: 999px;
-  background: var(--accent);
-}
-
-.hero__caption.is-in {
-  animation: heroCapIn 0.6s var(--ease) 0.6s both;
+.hero__caption.is-in .hero__ch {
+  animation: heroLetter 0.6s cubic-bezier(0.22, 0.8, 0.3, 1) calc(0.7s + var(--i) * 32ms) both;
 }
 
 .hero__caption.is-out {
-  animation: heroCapOut 0.3s ease both;
+  animation: heroFadeOut 0.3s ease both;
 }
 
-@keyframes heroRollIn {
-  from { transform: translateX(160%) rotate(600deg) scale(0.7); opacity: 0; }
-  35% { opacity: 1; }
-  to { transform: none; opacity: 1; }
+@keyframes heroReveal {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
 }
 
-@keyframes heroRollOut {
-  from { transform: none; opacity: 1; }
-  70% { opacity: 1; }
-  to { transform: translateX(-160%) rotate(-600deg) scale(0.7); opacity: 0; }
+@keyframes heroWipe {
+  from { clip-path: inset(0 0 0 0); }
+  to { clip-path: inset(0 0 100% 0); }
+}
+
+@keyframes heroZoomIn {
+  from { transform: scale(1.45); }
+  to { transform: scale(1); }
+}
+
+@keyframes heroDrift {
+  from { transform: scale(1); }
+  to { transform: scale(1.09) translateY(-1.5%); }
+}
+
+@keyframes heroOutlineIn {
+  from { transform: translate(0, 0); opacity: 0; }
+  to { transform: translate(7%, 4%); opacity: 0.7; }
+}
+
+@keyframes heroRibbonIn {
+  from { clip-path: inset(0 100% 0 0); transform: translateX(-30px); }
+  to { clip-path: inset(0 0 0 0); transform: none; }
 }
 
 @keyframes heroWordIn {
-  from { transform: translateX(45%); opacity: 0; }
+  from { transform: translateY(18%) scale(1.2); opacity: 0; }
   to { transform: none; opacity: 0.5; }
 }
 
 @keyframes heroWordOut {
   from { transform: none; opacity: 0.5; }
-  to { transform: translateX(-45%); opacity: 0; }
+  to { transform: translateY(-14%); opacity: 0; }
 }
 
-@keyframes heroShock {
-  from { transform: scale(0.9); opacity: 0.85; }
-  to { transform: scale(1.35); opacity: 0; }
+@keyframes heroLetter {
+  from { transform: translateY(110%); }
+  to { transform: none; }
 }
 
-@keyframes heroPop {
-  from { transform: rotate(-60deg) scale(0); opacity: 0; }
-  to { transform: rotate(-14deg) scale(1); opacity: 1; }
-}
-
-@keyframes heroProgress {
-  to { stroke-dashoffset: 0; }
+@keyframes heroFill {
+  to { transform: scaleY(1); }
 }
 
 @keyframes heroSpark {
   0% { transform: translateY(0) scale(0.6); opacity: 0; }
   15% { opacity: 0.9; }
-  100% { transform: translateY(-420%) scale(1.1); opacity: 0; }
+  100% { transform: translateY(-460%) scale(1.1); opacity: 0; }
 }
 
 @keyframes heroFadeIn {
@@ -4337,21 +4367,6 @@ button {
 
 @keyframes heroFadeOut {
   to { opacity: 0; }
-}
-
-@keyframes heroCapIn {
-  from { opacity: 0; transform: translate(-50%, 14px); }
-  to { opacity: 1; transform: translateX(-50%); }
-}
-
-@keyframes heroCapOut {
-  from { opacity: 1; transform: translateX(-50%); }
-  to { opacity: 0; transform: translate(-50%, -8px); }
-}
-
-@keyframes heroFloat {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(1.5deg); }
 }
 
 @keyframes heroSpin {
@@ -4378,13 +4393,17 @@ button {
     position: relative;
     top: auto;
     right: auto;
-    width: min(70vw, 320px);
-    margin: 0 auto 6.5rem;
+    width: min(62vw, 270px);
+    margin: 0 auto 5.5rem;
     transform: none;
   }
 
   .hero__word {
     font-size: clamp(4rem, 22vw, 7rem);
+  }
+
+  .hero__count {
+    display: none;
   }
 }
 
@@ -4393,7 +4412,7 @@ button {
     display: none;
   }
 
-  .hero__progress-bar {
-    stroke-dashoffset: 0;
+  .hero__line i {
+    transform: scaleY(1);
   }
 }
