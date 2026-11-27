@@ -7,12 +7,12 @@ import fries from "../assets/images/g-fries.jpg";
 interface Pick {
   title: string;
   tag: string;
-  /** big outlined word behind the frame */
+  /** big outlined word behind the deck */
   word: string;
-  /** colour of the glow, frame, sparks and ribbon */
+  /** colour of the glow, card border, sparks and light disc */
   accent: string;
   image: string;
-  /** which part of the photo stays visible inside the tall frame */
+  /** which part of the photo stays visible inside the tall card */
   focus: string;
 }
 
@@ -24,55 +24,53 @@ const PICKS: Pick[] = [
   { title: "BFC Combo Meal", tag: "Best Value", word: "Combo", accent: "#f0a30a", image: combo, focus: "50% 50%" },
 ];
 
-/** how long each item stays on screen once it has been revealed (ms) */
-const HOLD_MS = 4200;
-/** length of the reveal / wipe-out animations (ms) - keep in sync with the CSS */
-const IN_MS = 1100;
-const OUT_MS = 700;
-
-const STAMP_TEXT = "BEST FRIED CHICKEN \u2022 SINCE 2002 \u2022 ";
-
-/** a fixed set of sparks (x offset in %, size in px, delay and duration in s) - no randomness during render */
-const SPARKS = [
-  { x: 8, s: 5, d: 0, t: 5.2 },
-  { x: 20, s: 3, d: 1.4, t: 4.4 },
-  { x: 31, s: 6, d: 0.6, t: 6 },
-  { x: 44, s: 4, d: 2.3, t: 4.8 },
-  { x: 57, s: 3, d: 0.9, t: 5.6 },
-  { x: 68, s: 5, d: 3.1, t: 4.6 },
-  { x: 79, s: 4, d: 1.8, t: 5.8 },
-  { x: 92, s: 6, d: 0.3, t: 5 },
-];
+/** time one item stays in front before the deck moves on (ms) */
+const CYCLE_MS = 5200;
+/** how long the cards take to slide to their new place (ms) - keep in sync with --move */
+const MOVE_MS = 1100;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/** a fixed set of sparks (x offset in %, size in px, delay and duration in s) - no randomness during render */
+const SPARKS = [
+  { x: 6, s: 5, d: 0, t: 5.2 },
+  { x: 17, s: 3, d: 1.4, t: 4.4 },
+  { x: 29, s: 6, d: 0.6, t: 6 },
+  { x: 42, s: 4, d: 2.3, t: 4.8 },
+  { x: 55, s: 3, d: 0.9, t: 5.6 },
+  { x: 67, s: 5, d: 3.1, t: 4.6 },
+  { x: 80, s: 4, d: 1.8, t: 5.8 },
+  { x: 93, s: 6, d: 0.3, t: 5 },
+];
+
+/** where a card sits relative to the front one: centre, right, left, or hidden behind */
+function slot(i: number, index: number): "is-c" | "is-r" | "is-l" | "is-b" {
+  const n = PICKS.length;
+  let d = (i - index + n) % n;
+  if (d > n / 2) d -= n;
+  if (d === 0) return "is-c";
+  if (d === 1) return "is-r";
+  if (d === -1) return "is-l";
+  return "is-b";
+}
+
 /**
- * An arch-shaped photo frame: the item is revealed from the bottom up, holds for a few seconds
- * while a line fills beside it, then is wiped away upwards and replaced by the next one.
+ * A 3D coverflow deck: the best items are photo cards, one big in the middle, the others tilted
+ * at the sides. Every few seconds the deck turns and the next card swings to the front.
  * Purely decorative, so it is hidden from screen readers.
  */
 export default function HeroShowcase() {
   const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<"in" | "out">("in");
   const stageRef = useRef<HTMLDivElement>(null);
 
-  // reveal -> hold -> wipe out -> next item
+  // move on to the next item every few seconds (stays still for reduced-motion users)
   useEffect(() => {
-    const t = window.setTimeout(
-      () => {
-        if (phase === "in") {
-          setPhase("out");
-        } else {
-          setIndex((i) => (i + 1) % PICKS.length);
-          setPhase("in");
-        }
-      },
-      phase === "in" ? IN_MS + HOLD_MS : OUT_MS
-    );
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setTimeout(() => setIndex((i) => (i + 1) % PICKS.length), CYCLE_MS);
     return () => window.clearTimeout(t);
-  }, [phase, index]);
+  }, [index]);
 
-  // the frame leans a little towards the mouse (desktop only)
+  // the deck leans a little towards the mouse (desktop only)
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
@@ -95,17 +93,23 @@ export default function HeroShowcase() {
     };
   }, []);
 
-  const pick = PICKS[index];
-  const style = { "--accent": pick.accent, "--hold": `${HOLD_MS}ms`, "--in": `${IN_MS}ms` } as CSSProperties;
-  let letter = 0;
+  const style = {
+    "--accent": PICKS[index].accent,
+    "--move": `${MOVE_MS}ms`,
+    "--hold": `${CYCLE_MS - MOVE_MS}ms`,
+  } as CSSProperties;
 
   return (
     <div className="hero__stage" ref={stageRef} style={style} aria-hidden="true">
-      <div key={`g${index}`} className={`hero__aura is-${phase}`} />
+      {PICKS.map((p, i) => (
+        <div key={`a${p.word}`} className={`hero__aura${i === index ? " is-on" : ""}`} style={{ "--accent": p.accent } as CSSProperties} />
+      ))}
 
-      <div key={`w${index}`} className={`hero__word is-${phase}`}>
-        {pick.word}
-      </div>
+      {PICKS.map((p, i) => (
+        <div key={`w${p.word}`} className={`hero__word${i === index ? " is-on" : ""}`} style={{ "--accent": p.accent } as CSSProperties}>
+          {p.word}
+        </div>
+      ))}
 
       <div className="hero__sparks">
         {SPARKS.map((sp) => (
@@ -116,54 +120,42 @@ export default function HeroShowcase() {
         ))}
       </div>
 
-      <div className="hero__tilt">
-        {/* outline of the arch, a little off to the side */}
-        <span key={`o${index}`} className={`hero__outline is-${phase}`} />
+      <span className="hero__floor" />
 
-        <div key={`a${index}`} className={`hero__arch is-${phase}`}>
-          <img src={pick.image} alt="" draggable={false} style={{ objectPosition: pick.focus }} />
-        </div>
+      <div className="hero__deck">
+        <span className="hero__disc" />
+        <span className="hero__disc hero__disc--b" />
 
-        <span key={`r${index}`} className={`hero__ribbon is-${phase}`}>
-          {pick.tag}
-        </span>
-
-        <span key={`l${index}`} className={`hero__line is-${phase}`}>
-          <i />
-        </span>
-
-        <span className="hero__count">
-          <b>{pad(index + 1)}</b>/{pad(PICKS.length)}
-        </span>
-
-        <svg className="hero__stamp" viewBox="0 0 120 120">
-          <defs>
-            <path id="heroStampPath" d="M 60,60 m -46,0 a 46,46 0 1,1 92,0 a 46,46 0 1,1 -92,0" />
-          </defs>
-          <circle cx="60" cy="60" r="58" className="hero__stamp-bg" />
-          <text className="hero__stamp-ring">
-            <textPath href="#heroStampPath" textLength="283" lengthAdjust="spacing">
-              {STAMP_TEXT}
-            </textPath>
-          </text>
-          <text x="60" y="71" textAnchor="middle" className="hero__stamp-core">
-            BFC
-          </text>
-        </svg>
+        {PICKS.map((p, i) => {
+          let letter = 0;
+          return (
+            <figure key={p.title} className={`hero__card ${slot(i, index)}`} style={{ "--accent": p.accent } as CSSProperties}>
+              <img src={p.image} alt="" draggable={false} style={{ objectPosition: p.focus }} />
+              <figcaption>
+                <small>{p.tag}</small>
+                <strong>
+                  {p.title.split(" ").map((word, w) => (
+                    <span className="hero__w" key={w}>
+                      {word.split("").map((ch) => (
+                        <span className="hero__ch" key={letter} style={{ "--i": letter++ } as CSSProperties}>
+                          {ch}
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </strong>
+              </figcaption>
+            </figure>
+          );
+        })}
       </div>
 
-      <div key={`c${index}`} className={`hero__caption is-${phase}`}>
-        <strong>
-          {pick.title.split(" ").map((word, w) => (
-            <span className="hero__w" key={w}>
-              {word.split("").map((ch) => (
-                <span className="hero__ch" key={letter} style={{ "--i": letter++ } as CSSProperties}>
-                  {ch}
-                </span>
-              ))}
-            </span>
-          ))}
-        </strong>
+      <div className="hero__meter">
+        <b>{pad(index + 1)}</b>
+        <span className="hero__bar">
+          <i key={index} />
+        </span>
+        <em>{pad(PICKS.length)}</em>
       </div>
     </div>
   );
