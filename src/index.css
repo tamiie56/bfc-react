@@ -1968,14 +1968,8 @@ button {
   }
 }
 
-/* mobile hero: no forced full-screen height, so there is no empty band above or below the text.
-   the text starts right under the navbar and the next section follows the hero directly */
+/* mobile hero: full screen, text sits right under the navbar area */
 @media (max-width: 767px) {
-  .hero {
-    min-height: 0;
-    align-items: flex-start;
-  }
-
   .hero__inner {
     padding: 7.6rem 0 2.2rem;
   }
@@ -4490,27 +4484,6 @@ button {
   transform: rotateX(-90deg) translateZ(calc(var(--h) / 2));
 }
 
-/* shade on each face while the cube turns: the leaving face darkens, the arriving one brightens,
-   so the turn reads as a real cube */
-.fg__face::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 1.3s cubic-bezier(0.45, 0.05, 0.2, 1);
-}
-.fg__cube.is-flip .fg__face--front::after {
-  opacity: 0.5;
-}
-.fg__face--bottom::after {
-  opacity: 0.5;
-}
-.fg__cube.is-flip .fg__face--bottom::after {
-  opacity: 0;
-}
-
 .fg__stars {
   display: flex;
   gap: 0.25rem;
@@ -4654,8 +4627,7 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fg__cube.is-flip,
-  .fg__face::after {
+  .fg__cube.is-flip {
     transition: none;
   }
 }
