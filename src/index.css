@@ -4462,7 +4462,6 @@ button {
   text-align: center;
   background: var(--bg);
   color: var(--fg);
-  transition: background 0.3s;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
