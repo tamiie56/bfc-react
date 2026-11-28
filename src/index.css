@@ -4381,7 +4381,7 @@ button {
 /* ---------- reviews grid: 8 cubes that turn bottom to top (home) ---------- */
 .fg {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
   border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);

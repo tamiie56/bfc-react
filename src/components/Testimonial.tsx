@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import { usePublicReviews } from "../admin/store";
@@ -10,7 +11,7 @@ import { useParallax } from "../hooks/useParallax";
 /** shown only until the team picks feedback in the admin panel */
 const FALLBACK: PublicReview = { id: "default", name: REVIEW.name, message: REVIEW.text, rating: Math.round(REVIEW.rating) };
 
-const CELLS = 8; // 4 x 2 grid on desktop
+const MAX_CELLS = 8; // 4 x 2 grid on desktop
 const TICK = 2400; // a new cube turns this often
 const FLIP_MS = 1300; // must match the transition in .fg__cube.is-flip
 /** which cube turns next: criss-cross, so neighbours do not turn one after the other */
@@ -25,35 +26,71 @@ interface Cell {
   flip: boolean; // true once the next face is painted and the turn can start
 }
 
-function initCells(n: number): Cell[] {
-  const total = n === 1 ? 1 : CELLS;
-  let shift = n >= CELLS ? 0 : Math.max(1, Math.floor(n / 2));
-  if (shift > 0 && (4 + shift) % n === 0) shift += 1; // the second row must not repeat the first one
-  return Array.from({ length: total }, (_, i) => ({ cur: (i + (i >= 4 ? shift : 0)) % n, next: null, flip: false }));
+/**
+ * How many cubes to show. There is always at least one feedback that is NOT on screen,
+ * so a cube can turn to it and the same feedback is never shown twice at once.
+ * 9+ feedbacks -> 8 cubes, 5-8 -> 4 cubes, 4 -> 3, 3 -> 2, 2 -> 1 (it just flips between the two).
+ */
+function cellCount(n: number): number {
+  if (n >= MAX_CELLS + 1) return MAX_CELLS;
+  if (n >= 5) return 4;
+  return Math.max(1, n - 1);
 }
 
-/** the feedback shown the least right now (never the one already in this cube) */
-function pickNext(cells: Cell[], at: number, n: number): number | null {
+function initCells(n: number): Cell[] {
+  return Array.from({ length: cellCount(n) }, (_, i) => ({ cur: i % n, next: null, flip: false }));
+}
+
+/** the cubes that touch this one (same row / same column of the grid) */
+function neighbours(at: number, len: number): number[] {
+  const cols = Math.min(4, len);
+  const out: number[] = [];
+  if (at % cols > 0) out.push(at - 1);
+  if (at % cols < cols - 1 && at + 1 < len) out.push(at + 1);
+  if (at - cols >= 0) out.push(at - cols);
+  if (at + cols < len) out.push(at + cols);
+  return out;
+}
+
+/**
+ * Which cube turns now, and to which feedback.
+ * 1) never a feedback that is already on screen while another one is not (no repeats),
+ * 2) among those, the one whose colour differs from the old face and from the touching cubes.
+ * It looks at the cubes in the criss-cross order and takes the first one with a clear colour change.
+ */
+function chooseFlip(cells: Cell[], start: number, n: number): { at: number; next: number; step: number } | null {
   if (n < 2) return null;
   const shown = new Array<number>(n).fill(0);
   cells.forEach((c) => {
     shown[c.cur % n] += 1;
     if (c.next !== null) shown[c.next % n] += 1;
   });
-  const cur = cells[at].cur % n;
-  // prefer a feedback with a different colour, so the turn always shows a colour change
-  const diff = Array.from({ length: n }, (_, s) => s).some((s) => s !== cur && tone(s) !== tone(cur));
-  let best = Infinity;
-  let pool: number[] = [];
-  for (let s = 0; s < n; s++) {
-    if (s === cur) continue;
-    if (diff && tone(s) === tone(cur)) continue;
-    if (shown[s] < best) {
-      best = shown[s];
-      pool = [s];
-    } else if (shown[s] === best) pool.push(s);
+
+  let best: { at: number; next: number; step: number; pen: number } | null = null;
+  for (let k = 0; k < ORDER.length; k++) {
+    const at = ORDER[(start + k) % ORDER.length] % cells.length;
+    if (cells[at].next !== null) continue;
+    const cur = cells[at].cur % n;
+
+    let least = Infinity;
+    let pool: number[] = [];
+    for (let s = 0; s < n; s++) {
+      if (s === cur) continue;
+      if (shown[s] < least) {
+        least = shown[s];
+        pool = [s];
+      } else if (shown[s] === least) pool.push(s);
+    }
+    if (pool.length === 0) continue;
+
+    const around = neighbours(at, cells.length).map((j) => tone((cells[j].next ?? cells[j].cur) % n));
+    for (const s of pool) {
+      const pen = (tone(s) === tone(cur) ? 3 : 0) + around.filter((t) => t === tone(s)).length;
+      if (!best || pen < best.pen) best = { at, next: s, step: start + k + 1, pen };
+    }
+    if (best && best.pen === 0) break;
   }
-  return pool[Math.floor(Math.random() * pool.length)];
+  return best;
 }
 
 function Face({ r }: { r: PublicReview }) {
@@ -75,7 +112,17 @@ function Face({ r }: { r: PublicReview }) {
 export default function Testimonial() {
   const bgRef = useParallax<HTMLDivElement>(0.14);
   const picked = usePublicReviews();
-  const slides = useMemo(() => (picked && picked.length > 0 ? picked : [FALLBACK]), [picked]);
+  const slides = useMemo(() => {
+    if (!picked || picked.length === 0) return [FALLBACK];
+    // the same person with the same words twice is one feedback, not two
+    const seen = new Set<string>();
+    return picked.filter((r) => {
+      const k = `${r.name.trim().toLowerCase()}|${r.message.trim().toLowerCase()}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [picked]);
   const n = slides.length;
   const key = slides.map((s) => s.id).join("|");
 
@@ -98,10 +145,10 @@ export default function Testimonial() {
       if (document.hidden) return;
       const cs = cellsRef.current;
       if (cs.length < 2) return;
-      const at = ORDER[step++ % ORDER.length] % cs.length;
-      if (cs[at].next !== null) return;
-      const next = pickNext(cs, at, n);
-      if (next === null) return;
+      const choice = chooseFlip(cs, step, n);
+      if (!choice) return;
+      const { at, next } = choice;
+      step = choice.step;
       // 1) mount the incoming face first, so it is already painted when the turn starts
       setCells((prev) => prev.map((c, i) => (i === at ? { ...c, next, flip: false } : c)));
       // 2) two frames later start the turn (the transition never begins on a cold layer)
@@ -134,7 +181,12 @@ export default function Testimonial() {
       </div>
 
       <div className="container-wide testimonials__inner">
-        <div className={`fg reveal ${cells.length === 1 ? "fg--single" : ""}`} role="list" aria-label="What our customers say">
+        <div
+          className={`fg reveal ${cells.length === 1 ? "fg--single" : ""}`}
+          style={{ "--cols": Math.min(4, cells.length) } as CSSProperties}
+          role="list"
+          aria-label="What our customers say"
+        >
           {cells.map((c, i) => (
             <figure className="fg__cell" role="listitem" key={i}>
               <div className={`fg__cube ${c.flip ? "is-flip" : ""}`}>
