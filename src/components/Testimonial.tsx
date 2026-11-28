@@ -15,6 +15,9 @@ const TICK = 2400; // a new cube turns this often
 const FLIP_MS = 1300; // must match the transition in .fg__cube.is-flip
 /** which cube turns next: criss-cross, so neighbours do not turn one after the other */
 const ORDER = [0, 5, 2, 7, 1, 4, 3, 6];
+/** every feedback keeps its own brand colour (cream, red, yellow, dark), so a turning cube is easy to see */
+const TONES = 4;
+const tone = (i: number) => i % TONES;
 
 interface Cell {
   cur: number; // index of the feedback showing now
@@ -38,10 +41,13 @@ function pickNext(cells: Cell[], at: number, n: number): number | null {
     if (c.next !== null) shown[c.next % n] += 1;
   });
   const cur = cells[at].cur % n;
+  // prefer a feedback with a different colour, so the turn always shows a colour change
+  const diff = Array.from({ length: n }, (_, s) => s).some((s) => s !== cur && tone(s) !== tone(cur));
   let best = Infinity;
   let pool: number[] = [];
   for (let s = 0; s < n; s++) {
     if (s === cur) continue;
+    if (diff && tone(s) === tone(cur)) continue;
     if (shown[s] < best) {
       best = shown[s];
       pool = [s];
@@ -132,11 +138,11 @@ export default function Testimonial() {
           {cells.map((c, i) => (
             <figure className="fg__cell" role="listitem" key={i}>
               <div className={`fg__cube ${c.flip ? "is-flip" : ""}`}>
-                <div className="fg__face fg__face--front">
+                <div className={`fg__face fg__face--front fg__tone--${tone(c.cur % n)}`}>
                   <Face r={slides[c.cur % n]} />
                 </div>
                 {c.next !== null && (
-                  <div className="fg__face fg__face--bottom" aria-hidden>
+                  <div className={`fg__face fg__face--bottom fg__tone--${tone((c.next ?? 0) % n)}`} aria-hidden>
                     <Face r={slides[c.next % n]} />
                   </div>
                 )}

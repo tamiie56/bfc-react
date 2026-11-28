@@ -4393,12 +4393,6 @@ button {
 
 .fg__cell {
   --h: 220px;
-  --bg: #fff7ea;
-  --bg-h: #ffefcf;
-  --fg: #150e0c;
-  --accent: #c20d00;
-  --good: #1fa24a;
-  --low: #e03126;
   position: relative;
   height: var(--h);
   margin: 0;
@@ -4406,17 +4400,11 @@ button {
   perspective: 1500px;
   border-right: 1px solid rgba(21, 14, 12, 0.14);
   border-bottom: 1px solid rgba(21, 14, 12, 0.14);
-  background: var(--bg);
-  color: var(--fg);
-  transition: background 0.3s;
-}
-.fg__cell:hover {
-  background: var(--bg-h);
+  background: #2a1c16;
 }
 
-/* four brand colours in a checkerboard, so no two touching cells match */
-.fg__cell:nth-child(1),
-.fg__cell:nth-child(7) {
+/* each feedback has its own brand colour; it travels with the feedback, not with the cell */
+.fg__tone--0 {
   --bg: #fff7ea;
   --bg-h: #ffefcf;
   --fg: #150e0c;
@@ -4424,8 +4412,7 @@ button {
   --good: #1fa24a;
   --low: #e03126;
 }
-.fg__cell:nth-child(2),
-.fg__cell:nth-child(8) {
+.fg__tone--1 {
   --bg: #c20d00;
   --bg-h: #d91a0b;
   --fg: #ffffff;
@@ -4433,8 +4420,7 @@ button {
   --good: #9bf5b2;
   --low: #2a0803;
 }
-.fg__cell:nth-child(3),
-.fg__cell:nth-child(5) {
+.fg__tone--2 {
   --bg: #ffc80a;
   --bg-h: #ffd33d;
   --fg: #1a110d;
@@ -4442,8 +4428,7 @@ button {
   --good: #0f7d34;
   --low: #b00d00;
 }
-.fg__cell:nth-child(4),
-.fg__cell:nth-child(6) {
+.fg__tone--3 {
   --bg: #2a1c16;
   --bg-h: #38271f;
   --fg: #ffffff;
@@ -4475,9 +4460,14 @@ button {
   gap: 0.85rem;
   padding: 1.2rem 1.6rem;
   text-align: center;
-  background: inherit;
+  background: var(--bg);
+  color: var(--fg);
+  transition: background 0.3s;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+.fg__cell:hover .fg__face {
+  background: var(--bg-h);
 }
 .fg__face--front {
   transform: translateZ(calc(var(--h) / 2));
@@ -4532,42 +4522,6 @@ button {
   .fg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .fg__cell:nth-child(1),
-  .fg__cell:nth-child(5) {
-    --bg: #fff7ea;
-    --bg-h: #ffefcf;
-    --fg: #150e0c;
-    --accent: #c20d00;
-    --good: #1fa24a;
-    --low: #e03126;
-  }
-  .fg__cell:nth-child(2),
-  .fg__cell:nth-child(6) {
-    --bg: #c20d00;
-    --bg-h: #d91a0b;
-    --fg: #ffffff;
-    --accent: #ffc80a;
-    --good: #9bf5b2;
-    --low: #2a0803;
-  }
-  .fg__cell:nth-child(3),
-  .fg__cell:nth-child(7) {
-    --bg: #ffc80a;
-    --bg-h: #ffd33d;
-    --fg: #1a110d;
-    --accent: #a80b00;
-    --good: #0f7d34;
-    --low: #b00d00;
-  }
-  .fg__cell:nth-child(4),
-  .fg__cell:nth-child(8) {
-    --bg: #2a1c16;
-    --bg-h: #38271f;
-    --fg: #ffffff;
-    --accent: #ffc80a;
-    --good: #3fcf6d;
-    --low: #ff5a4f;
-  }
 }
 @media (max-width: 600px) {
   .fg {
@@ -4592,39 +4546,6 @@ button {
   }
   .fg__cell:nth-child(n + 5) {
     display: none;
-  }
-  /* one column: cream, dark, red, yellow, so the last cell is not dark like the section behind it */
-  .fg__cell:nth-child(1) {
-    --bg: #fff7ea;
-    --bg-h: #ffefcf;
-    --fg: #150e0c;
-    --accent: #c20d00;
-    --good: #1fa24a;
-    --low: #e03126;
-  }
-  .fg__cell:nth-child(2) {
-    --bg: #2a1c16;
-    --bg-h: #38271f;
-    --fg: #ffffff;
-    --accent: #ffc80a;
-    --good: #3fcf6d;
-    --low: #ff5a4f;
-  }
-  .fg__cell:nth-child(3) {
-    --bg: #c20d00;
-    --bg-h: #d91a0b;
-    --fg: #ffffff;
-    --accent: #ffc80a;
-    --good: #9bf5b2;
-    --low: #2a0803;
-  }
-  .fg__cell:nth-child(4) {
-    --bg: #ffc80a;
-    --bg-h: #ffd33d;
-    --fg: #1a110d;
-    --accent: #a80b00;
-    --good: #0f7d34;
-    --low: #b00d00;
   }
 }
 
