@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties, KeyboardEvent, TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaChevronLeft, FaChevronRight, FaQuoteRight, FaRegStar, FaStar } from "react-icons/fa";
+import { FaRegStar, FaStar } from "react-icons/fa";
 import { usePublicReviews } from "../admin/store";
 import type { PublicReview } from "../admin/store";
 import reviewImg from "../assets/images/review.jpg";
@@ -11,66 +10,102 @@ import { useParallax } from "../hooks/useParallax";
 /** shown only until the team picks feedback in the admin panel */
 const FALLBACK: PublicReview = { id: "default", name: REVIEW.name, message: REVIEW.text, rating: Math.round(REVIEW.rating) };
 
-const INTERVAL = 6000;
+const CELLS = 8; // 4 x 2 grid on desktop
+const TICK = 2000; // a new cube turns this often
+const FLIP_MS = 900; // must match the transition in .fg__cube.is-flip
+/** which cube turns next: criss-cross, so neighbours do not turn one after the other */
+const ORDER = [0, 5, 2, 7, 1, 4, 3, 6];
 
-/** how far (in cards) a slide sits from the active one, the short way round the loop */
-function offsetOf(i: number, active: number, count: number): number {
-  let o = (i - active + count) % count;
-  if (o > count / 2) o -= count;
-  return o;
+interface Cell {
+  cur: number; // index of the feedback showing now
+  next: number | null; // index of the feedback turning in from below
+}
+
+function initCells(n: number): Cell[] {
+  const total = n === 1 ? 1 : CELLS;
+  let shift = n >= CELLS ? 0 : Math.max(1, Math.floor(n / 2));
+  if (shift > 0 && (4 + shift) % n === 0) shift += 1; // the second row must not repeat the first one
+  return Array.from({ length: total }, (_, i) => ({ cur: (i + (i >= 4 ? shift : 0)) % n, next: null }));
+}
+
+/** the feedback shown the least right now (never the one already in this cube) */
+function pickNext(cells: Cell[], at: number, n: number): number | null {
+  if (n < 2) return null;
+  const shown = new Array<number>(n).fill(0);
+  cells.forEach((c) => {
+    shown[c.cur % n] += 1;
+    if (c.next !== null) shown[c.next % n] += 1;
+  });
+  const cur = cells[at].cur % n;
+  let best = Infinity;
+  let pool: number[] = [];
+  for (let s = 0; s < n; s++) {
+    if (s === cur) continue;
+    if (shown[s] < best) {
+      best = shown[s];
+      pool = [s];
+    } else if (shown[s] === best) pool.push(s);
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function Face({ r }: { r: PublicReview }) {
+  return (
+    <>
+      {r.rating > 0 && (
+        <ul className={`fg__stars ${r.rating === 1 ? "stars--low" : "stars--good"}`} aria-label={`${r.rating} out of 5 stars`}>
+          {Array.from({ length: 5 }).map((_, s) => (
+            <li key={s}>{s < r.rating ? <FaStar /> : <FaRegStar />}</li>
+          ))}
+        </ul>
+      )}
+      <blockquote className="fg__text">“{r.message}”</blockquote>
+      <figcaption className="fg__name">{r.name}</figcaption>
+    </>
+  );
 }
 
 export default function Testimonial() {
   const bgRef = useParallax<HTMLDivElement>(0.14);
   const picked = usePublicReviews();
-  const slides = picked && picked.length > 0 ? picked : [FALLBACK];
-  const count = slides.length;
+  const slides = useMemo(() => (picked && picked.length > 0 ? picked : [FALLBACK]), [picked]);
+  const n = slides.length;
+  const key = slides.map((s) => s.id).join("|");
 
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const touchX = useRef<number | null>(null);
-  const prevOffsets = useRef<Record<string, number>>({});
+  const [cells, setCells] = useState<Cell[]>(() => initCells(n));
+  const cellsRef = useRef(cells);
+  cellsRef.current = cells;
 
-  const go = useCallback((n: number) => setIndex(((n % count) + count) % count), [count]);
-
-  // the team may have removed a slide while it was showing
+  // the team added / removed feedback: start the grid again
   useEffect(() => {
-    if (index >= count) setIndex(0);
-  }, [index, count]);
+    setCells(initCells(n));
+  }, [key, n]);
 
-  // auto-play keeps going on hover (off for people who asked for less motion, and while a finger is down)
+  // one cube turns every TICK (it keeps going on hover)
   useEffect(() => {
-    if (count < 2 || paused) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setIndex((i) => (i + 1) % count), INTERVAL);
-    return () => clearInterval(t);
-  }, [count, paused, index]);
-
-  const onTouchStart = (e: TouchEvent) => {
-    touchX.current = e.touches[0].clientX;
-    setPaused(true);
-  };
-  const onTouchEnd = (e: TouchEvent) => {
-    const start = touchX.current;
-    touchX.current = null;
-    setPaused(false);
-    if (start === null) return;
-    const dx = e.changedTouches[0].clientX - start;
-    if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1));
-  };
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "ArrowLeft") go(index - 1);
-    if (e.key === "ArrowRight") go(index + 1);
-  };
-
-  const active = index >= count ? 0 : index;
-  const offsets = slides.map((r, i) => ({ id: r.id, o: offsetOf(i, active, count) }));
-
-  // a card that wraps from one edge to the other jumps there instead of flying across the stage
-  const jumped = new Set(offsets.filter(({ id, o }) => id in prevOffsets.current && Math.abs(o - prevOffsets.current[id]) > 1).map((x) => x.id));
-  useEffect(() => {
-    prevOffsets.current = Object.fromEntries(offsets.map(({ id, o }) => [id, o]));
-  });
+    if (n < 2) return;
+    const timers = new Set<number>();
+    let step = 0;
+    const tick = setInterval(() => {
+      if (document.hidden) return;
+      const cs = cellsRef.current;
+      if (cs.length < 2) return;
+      const at = ORDER[step++ % ORDER.length] % cs.length;
+      if (cs[at].next !== null) return;
+      const next = pickNext(cs, at, n);
+      if (next === null) return;
+      setCells((prev) => prev.map((c, i) => (i === at ? { ...c, next } : c)));
+      const t = window.setTimeout(() => {
+        timers.delete(t);
+        setCells((prev) => prev.map((c, i) => (i === at && c.next !== null ? { cur: c.next, next: null } : c)));
+      }, FLIP_MS + 60);
+      timers.add(t);
+    }, TICK);
+    return () => {
+      clearInterval(tick);
+      timers.forEach((t) => clearTimeout(t));
+    };
+  }, [key, n]);
 
   return (
     <section className="testimonials" id="testimonials">
@@ -79,73 +114,27 @@ export default function Testimonial() {
       </div>
 
       <div className="container testimonials__inner">
-        <div
-          className="rv reveal reveal--zoom"
-          role="region"
-          aria-roledescription="carousel"
-          aria-label="What our customers say"
-          tabIndex={0}
-          onKeyDown={onKeyDown}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          <div className="rv__stage" aria-live={paused ? "polite" : "off"}>
-            {slides.map((r, i) => {
-              const o = offsets[i].o;
-              const abs = Math.abs(o);
-              const initial = Array.from(r.name.trim())[0]?.toUpperCase() ?? "B";
-              return (
-                <figure
-                  key={r.id}
-                  className={`rv__card ${i === active ? "is-active" : ""} ${jumped.has(r.id) ? "is-jump" : ""}`}
-                  style={{ "--o": o, "--abs": abs, zIndex: 10 - abs } as CSSProperties}
-                  data-abs={abs > 2 ? 3 : abs}
-                  aria-hidden={i !== active}
-                  aria-label={`${i + 1} of ${count}`}
-                  onClick={i !== active && abs <= 2 ? () => go(i) : undefined}
-                >
-                  <FaQuoteRight className="rv__mark" aria-hidden />
-                  {r.rating > 0 && (
-                    <ul className={`rv__stars ${r.rating === 1 ? "stars--low" : "stars--good"}`} aria-label={`${r.rating} out of 5 stars`}>
-                      {Array.from({ length: 5 }).map((_, s) => (
-                        <li key={s}>{s < r.rating ? <FaStar /> : <FaRegStar />}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <blockquote className="rv__text">“{r.message}”</blockquote>
-                  <figcaption className="rv__who">
-                    <span className="rv__avatar" aria-hidden>{initial}</span>
-                    <span className="rv__meta">
-                      <strong>{r.name}</strong>
-                      <small>BFC customer</small>
-                    </span>
-                  </figcaption>
-                </figure>
-              );
-            })}
-          </div>
-
-          {count > 1 && (
-            <>
-              <button type="button" className="rv__arrow rv__arrow--prev" onClick={() => go(active - 1)} aria-label="Previous review">
-                <FaChevronLeft aria-hidden />
-              </button>
-              <button type="button" className="rv__arrow rv__arrow--next" onClick={() => go(active + 1)} aria-label="Next review">
-                <FaChevronRight aria-hidden />
-              </button>
-              <div className="rv__dots">
-                {slides.map((r, i) => (
-                  <button key={r.id} type="button" className={i === active ? "is-active" : ""} onClick={() => go(i)} aria-label={`Show review ${i + 1}`} aria-current={i === active} />
-                ))}
+        <div className={`fg reveal ${cells.length === 1 ? "fg--single" : ""}`} role="list" aria-label="What our customers say">
+          {cells.map((c, i) => (
+            <figure className="fg__cell" role="listitem" key={i}>
+              <div className={`fg__cube ${c.next !== null ? "is-flip" : ""}`}>
+                <div className="fg__face fg__face--front">
+                  <Face r={slides[c.cur % n]} />
+                </div>
+                {c.next !== null && (
+                  <div className="fg__face fg__face--bottom" aria-hidden>
+                    <Face r={slides[c.next % n]} />
+                  </div>
+                )}
               </div>
-            </>
-          )}
+            </figure>
+          ))}
+        </div>
 
-          <div className="rv__cta">
-            <Link to="/feedback" className="btn btn--ghost btn--sm">
-              Send Feedback
-            </Link>
-          </div>
+        <div className="fg__cta">
+          <Link to="/feedback" className="btn btn--ghost btn--sm">
+            Send Feedback
+          </Link>
         </div>
       </div>
     </section>
