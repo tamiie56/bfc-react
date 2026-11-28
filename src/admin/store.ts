@@ -70,7 +70,7 @@ export interface AdminFeedback {
   email: string;
   phone: string;
   message: string;
-  rating: number; // 1-5
+  rating: number; // 1-5 (0 = old feedback imported from the Google Sheet, no rating)
   /** the team switched it on for the website Reviews slider */
   featured: boolean;
   featuredAt?: string;
@@ -616,6 +616,19 @@ export function recordFeedback(f: Pick<AdminFeedback, "name" | "email" | "phone"
   const id = "FB-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
   const item: AdminFeedback = { ...f, id, featured: false, placedAt: at, updatedAt: at };
   return feedbackStore.set([item, ...feedbackStore.get()], true);
+}
+
+/** Adds feedback imported from the old Google Sheet (no rating). Already imported ones are skipped. */
+export function importFeedbacks(rows: Pick<AdminFeedback, "id" | "name" | "email" | "phone" | "message" | "placedAt">[]): { added: number; skipped: number } {
+  const current = feedbackStore.get();
+  const have = new Set(current.map((f) => f.id));
+  const fresh: AdminFeedback[] = rows
+    .filter((r) => !have.has(r.id))
+    .map((r) => ({ ...r, rating: 0, featured: false, updatedAt: r.placedAt }));
+  if (fresh.length > 0) {
+    void feedbackStore.set([...current, ...fresh].sort((a, b) => b.placedAt.localeCompare(a.placedAt)));
+  }
+  return { added: fresh.length, skipped: rows.length - fresh.length };
 }
 
 export function setFeedbackFeatured(id: string, featured: boolean): void {

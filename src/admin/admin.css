@@ -2377,8 +2377,13 @@ button.adm-list__row:hover {
 .adm-stars {
   display: inline-flex;
   gap: 2px;
-  color: #e0a800;
   font-size: 14px;
+}
+.adm-stars.is-good {
+  color: #1a7f37;
+}
+.adm-stars.is-low {
+  color: #c20d00;
 }
 .adm-fb-list {
   display: grid;

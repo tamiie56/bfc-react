@@ -76,11 +76,13 @@ export default function Testimonial() {
             <div className="reviews__track" style={{ transform: `translateX(-${index * 100}%)` }} aria-live={paused ? "polite" : "off"}>
               {slides.map((r, i) => (
                 <figure key={r.id} className={`reviews__slide ${i === index ? "is-active" : ""}`} aria-hidden={i !== index} aria-label={`${i + 1} of ${count}`}>
-                  <ul className="stars" aria-label={`${r.rating} out of 5 stars`}>
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <li key={s}>{s < r.rating ? <FaStar /> : <FaRegStar />}</li>
-                    ))}
-                  </ul>
+                  {r.rating > 0 && (
+                    <ul className="stars" aria-label={`${r.rating} out of 5 stars`}>
+                      {Array.from({ length: 5 }).map((_, s) => (
+                        <li key={s}>{s < r.rating ? <FaStar /> : <FaRegStar />}</li>
+                      ))}
+                    </ul>
+                  )}
                   <blockquote className="review__text">{r.message}</blockquote>
                   <figcaption className="review__name">{r.name}</figcaption>
                 </figure>

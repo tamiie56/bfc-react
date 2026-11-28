@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
-import { FaCommentDots, FaEnvelope, FaPhoneAlt, FaRegStar, FaSearch, FaStar, FaTrashAlt } from "react-icons/fa";
+import { useMemo, useRef, useState } from "react";
+import { FaCommentDots, FaEnvelope, FaPhoneAlt, FaRegStar, FaSearch, FaStar, FaTrashAlt, FaUpload } from "react-icons/fa";
 import { ago, fmtDateTime } from "../format";
-import { deleteFeedback, setFeedbackFeatured, useFeedbacks } from "../store";
+import { feedbackFromCsv } from "../importFeedback";
+import { deleteFeedback, importFeedbacks, setFeedbackFeatured, useFeedbacks } from "../store";
 import type { AdminFeedback } from "../store";
 import { Empty, PageHead, Pill, Switch, useConfirm, useToast } from "../ui";
 
@@ -10,9 +11,11 @@ type Tab = "all" | "shown" | "hidden";
 /** the website slider shows at most this many (newest chosen first) */
 const SLIDER_MAX = 12;
 
+/** 1 star is red, 2-5 stars are green; old imported feedback has no rating */
 function Stars({ value }: { value: number }) {
+  if (value < 1) return <span className="adm-muted">No rating</span>;
   return (
-    <span className="adm-stars" aria-label={`${value} out of 5`}>
+    <span className={`adm-stars ${value === 1 ? "is-low" : "is-good"}`} aria-label={`${value} out of 5`}>
       {Array.from({ length: 5 }).map((_, i) => (i < value ? <FaStar key={i} aria-hidden /> : <FaRegStar key={i} aria-hidden />))}
     </span>
   );
@@ -24,6 +27,7 @@ export default function Feedback() {
   const { ask, dialog } = useConfirm();
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const shown = items.filter((f) => f.featured).length;
 
@@ -40,6 +44,26 @@ export default function Feedback() {
   const toggle = (f: AdminFeedback, on: boolean) => {
     setFeedbackFeatured(f.id, on);
     toast(on ? `${f.name}'s feedback is now on the website` : `${f.name}'s feedback removed from the website`, on ? "ok" : "warn");
+  };
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const rows = feedbackFromCsv(await file.text());
+      if (rows.length === 0) {
+        toast("No feedback found in that file. Use the CSV downloaded from the Google Sheet.", "warn");
+        return;
+      }
+      const { added, skipped } = importFeedbacks(rows);
+      toast(
+        added === 0
+          ? "All of these are already imported"
+          : `Imported ${added} feedback${added === 1 ? "" : "s"}${skipped ? ` (${skipped} already there)` : ""}`
+      );
+    } catch {
+      toast("Could not read that file", "warn");
+    }
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const remove = (f: AdminFeedback) =>
@@ -65,11 +89,22 @@ export default function Feedback() {
       <PageHead
         title="Feedback"
         sub={`${items.length} ${items.length === 1 ? "message" : "messages"} - ${shown} shown in the website Reviews slider`}
+        actions={
+          <>
+            <button className="adm-btn adm-btn--ghost" onClick={() => fileRef.current?.click()}>
+              <FaUpload aria-hidden /> Import from Google Sheet
+            </button>
+            <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => void onFile(e.target.files?.[0])} />
+          </>
+        }
       />
 
       <p className="adm-note-box">
         Switch on <b>Show on website</b> for the feedback you want in the Reviews slider on the home page. The slider shows up to {SLIDER_MAX}, newest
         choice first. The customer's phone and email are never shown on the website.
+        <br />
+        Old feedback in your Google Sheet: open the sheet, <b>File &rarr; Download &rarr; Comma Separated Values (.csv)</b>, then press{" "}
+        <b>Import from Google Sheet</b> and pick that file. Importing the same file again will not create duplicates.
       </p>
 
       <div className="adm-toolbar">
