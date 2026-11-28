@@ -4640,6 +4640,16 @@ button {
   }
 }
 
+/* a grid column must be allowed to shrink, or the scrolling chips stretch the whole page sideways */
+@media (max-width: 991px) {
+  .outlets__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .outlets__grid > * {
+    min-width: 0;
+  }
+}
+
 @media (max-width: 575px) {
   .section {
     padding: 3.5rem 0;
