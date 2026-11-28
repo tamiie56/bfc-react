@@ -1124,15 +1124,6 @@ button {
   width: clamp(210px, 24vw, 300px);
 }
 
-.stage__figure::before {
-  content: "";
-  position: absolute;
-  inset: -16px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.35);
-  animation: spin 26s linear infinite;
-}
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
