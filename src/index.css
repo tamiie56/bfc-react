@@ -1968,22 +1968,24 @@ button {
   }
 }
 
-/* mobile hero: full screen, text sits right under the navbar area */
+/* mobile hero: full screen, and the free height is shared evenly between the items,
+   so there is no big empty band above or below the text */
 @media (max-width: 767px) {
+  .hero {
+    align-items: stretch;
+  }
+
   .hero__inner {
-    padding: 7.6rem 0 2.2rem;
+    min-height: 100vh;
+    min-height: 100dvh;
+    justify-content: space-evenly;
+    padding: 7.2rem 0 2rem;
   }
 
-  .hero__title {
-    margin-top: 1.3rem;
-  }
-
-  .hero__lead {
-    margin: 1.2rem 0 1.5rem;
-  }
-
+  .hero__title,
+  .hero__lead,
   .hero__cta {
-    margin-bottom: 1.4rem;
+    margin: 0;
   }
 }
 
