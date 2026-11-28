@@ -6,6 +6,7 @@ import { useAuthed } from "./auth";
 import Bookings from "./pages/Bookings";
 import Customers from "./pages/Customers";
 import Dashboard from "./pages/Dashboard";
+import Feedback from "./pages/Feedback";
 import Login from "./pages/Login";
 import MenuManager from "./pages/MenuManager";
 import Orders from "./pages/Orders";
@@ -38,6 +39,7 @@ export default function AdminApp() {
         <Route path="bookings" element={<Bookings />} />
         <Route path="menu" element={<MenuManager />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="feedback" element={<Feedback />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>

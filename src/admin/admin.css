@@ -674,7 +674,6 @@ textarea.adm-input {
   display: grid;
   gap: 1.25rem;
   align-content: start;
-  max-width: 1380px;
   width: 100%;
 }
 .adm-page__head {
@@ -1345,26 +1344,29 @@ button.adm-list__row:hover {
   gap: 0.5rem;
   justify-items: end;
   pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hind Siliguri", sans-serif;
 }
 .adm-toast {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  background: var(--a-ink);
+  background: #1f2328;
   color: #fff;
-  border-radius: 12px;
+  border: 1px solid #343a42;
+  border-radius: 8px;
   padding: 0.7rem 1rem;
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-  animation: adm-toast 0.35s var(--ease) both;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(17, 19, 23, 0.25);
+  animation: adm-toast 0.35s var(--ease, ease) both;
 }
 .adm-toast svg {
-  color: #5be08a;
+  color: #4ade80;
   flex: none;
 }
 .adm-toast--warn svg {
-  color: var(--a-yellow);
+  color: #ffc80a;
 }
 @keyframes adm-toast {
   from {
@@ -2012,8 +2014,7 @@ button.adm-list__row:hover {
   padding: 0.05rem 0.45rem;
 }
 .adm-outlets__scroll {
-  max-height: 460px;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 /* =====================================================
@@ -2370,4 +2371,84 @@ button.adm-list__row:hover {
 }
 .adm-note-box {
   border-radius: 8px;
+}
+
+/* ---------- feedback manager ---------- */
+.adm-stars {
+  display: inline-flex;
+  gap: 2px;
+  color: #e0a800;
+  font-size: 14px;
+}
+.adm-fb-list {
+  display: grid;
+  gap: 0.8rem;
+}
+.adm-fb {
+  display: grid;
+  gap: 0.7rem;
+}
+.adm-fb.is-on {
+  border-left: 4px solid var(--a-green);
+}
+.adm-fb__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.adm-fb__name {
+  display: block;
+  font-size: 16px;
+}
+.adm-fb__top small {
+  color: var(--a-muted);
+  font-size: 12px;
+}
+.adm-fb__rate {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.adm-fb__msg {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.adm-fb__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--a-line-2);
+}
+.adm-fb__contact {
+  display: flex;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  color: var(--a-muted);
+  font-size: 13px;
+}
+.adm-fb__contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.adm-fb__contact a:hover {
+  color: var(--a-red);
+}
+.adm-fb__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.adm-fb__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
 }

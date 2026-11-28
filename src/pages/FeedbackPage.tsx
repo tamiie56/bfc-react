@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { FaCheckCircle, FaPaperPlane } from "react-icons/fa";
+import { FaCheckCircle, FaPaperPlane, FaRegStar, FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { isRemote } from "../admin/supabase";
+import { recordFeedback } from "../admin/store";
 import heroImg from "../assets/images/hero.jpg";
 
 /** Google Apps Script web app that writes every feedback into the Google Sheet (see google-apps-script/feedback.gs) */
@@ -11,11 +13,12 @@ interface Form {
   email: string;
   phone: string;
   message: string;
+  rating: number;
   /** honeypot: hidden from people, bots fill it */
   website: string;
 }
 
-const EMPTY: Form = { name: "", email: "", phone: "", message: "", website: "" };
+const EMPTY: Form = { name: "", email: "", phone: "", message: "", rating: 0, website: "" };
 
 function validate(f: Form): Record<string, string> {
   const e: Record<string, string> = {};
@@ -23,6 +26,7 @@ function validate(f: Form): Record<string, string> {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email.trim())) e.email = "Enter a valid email address";
   const digits = f.phone.replace(/[\s\-()+]/g, "");
   if (!/^\d{10,15}$/.test(digits)) e.phone = "Enter a valid phone number";
+  if (f.rating < 1) e.rating = "Please choose a star rating";
   if (f.message.trim().length < 5) e.message = "Please write your feedback (at least 5 characters)";
   return e;
 }
@@ -32,7 +36,7 @@ export default function FeedbackPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
 
-  const set = (key: keyof Form) => (ev: { target: { value: string } }) => {
+  const set = (key: Exclude<keyof Form, "rating">) => (ev: { target: { value: string } }) => {
     setForm((f) => ({ ...f, [key]: ev.target.value }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
   };
@@ -45,33 +49,50 @@ export default function FeedbackPage() {
     setErrors(found);
     if (Object.keys(found).length) return;
 
-    if (!SHEET_URL) {
-      console.warn("VITE_FEEDBACK_SHEET_URL is empty - see google-apps-script/feedback.gs");
+    // bots fill the hidden field: pretend it worked, save nothing
+    if (form.website) {
+      setStatus("done");
+      return;
+    }
+
+    if (!isRemote && !SHEET_URL) {
+      console.warn("Neither Supabase nor VITE_FEEDBACK_SHEET_URL is set - feedback has nowhere to go");
       setStatus("error");
       return;
     }
 
     setStatus("sending");
-    try {
-      // Apps Script has no CORS headers, so this is a "no-cors" request with a plain-text body.
-      // The reply can't be read, but a network failure still throws.
-      await fetch(SHEET_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          message: form.message.trim(),
-          website: form.website,
-        }),
-      });
-      setForm(EMPTY);
-      setStatus("done");
-    } catch {
-      setStatus("error");
+    const clean = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      message: form.message.trim(),
+      rating: form.rating,
+    };
+
+    const jobs: Promise<unknown>[] = [];
+    // 1) the team panel (Feedback page) - this is where the team picks what shows on the website
+    jobs.push(recordFeedback(clean));
+    // 2) the Google Sheet copy, when it is set up. Apps Script has no CORS headers, so this is a
+    //    "no-cors" request with a plain-text body; the reply can't be read, a network failure still throws.
+    if (SHEET_URL) {
+      jobs.push(
+        fetch(SHEET_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ ...clean, website: form.website }),
+        })
+      );
     }
+
+    const results = await Promise.allSettled(jobs);
+    if (results.every((r) => r.status === "rejected")) {
+      setStatus("error");
+      return;
+    }
+    setForm(EMPTY);
+    setStatus("done");
   }
 
   return (
@@ -147,6 +168,29 @@ export default function FeedbackPage() {
                   />
                   {errors.email && <small className="field__err">{errors.email}</small>}
                 </label>
+
+                <div className="field">
+                  <span id="rate-label">Your rating</span>
+                  <div className="rate" role="radiogroup" aria-labelledby="rate-label">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={form.rating === n}
+                        aria-label={`${n} ${n === 1 ? "star" : "stars"}`}
+                        className={n <= form.rating ? "is-on" : ""}
+                        onClick={() => {
+                          setForm((f) => ({ ...f, rating: n }));
+                          if (errors.rating) setErrors((e) => ({ ...e, rating: "" }));
+                        }}
+                      >
+                        {n <= form.rating ? <FaStar aria-hidden /> : <FaRegStar aria-hidden />}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.rating && <small className="field__err">{errors.rating}</small>}
+                </div>
 
                 <label className="field">
                   <span>Your feedback</span>

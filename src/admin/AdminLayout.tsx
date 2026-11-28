@@ -8,6 +8,7 @@ import {
   FaCog,
   FaExternalLinkAlt,
   FaSignOutAlt,
+  FaCommentDots,
   FaUsers,
   FaUtensils,
 } from "react-icons/fa";
@@ -27,6 +28,7 @@ const NAV: { to: string; label: string; icon: IconType; end?: boolean; badge?: "
   { to: "/admin/bookings", label: "Table Bookings", icon: FaCalendarCheck, badge: "bookings" },
   { to: "/admin/menu", label: "Menu", icon: FaUtensils },
   { to: "/admin/customers", label: "Customers", icon: FaUsers },
+  { to: "/admin/feedback", label: "Feedback", icon: FaCommentDots },
   { to: "/admin/settings", label: "Settings", icon: FaCog },
 ];
 
@@ -36,6 +38,7 @@ const TITLES: Record<string, string> = {
   "/admin/bookings": "Table Bookings",
   "/admin/menu": "Menu",
   "/admin/customers": "Customers",
+  "/admin/feedback": "Feedback",
   "/admin/settings": "Settings",
 };
 

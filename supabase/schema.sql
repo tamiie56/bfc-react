@@ -191,3 +191,56 @@ $$;
 
 revoke all on function public.my_orders(text) from public;
 grant execute on function public.my_orders(text) to anon, authenticated;
+
+-- ---------- customer feedback + website Reviews slider ----------
+-- Everyone can SEND feedback, only the team can read it, and the website can only read the
+-- feedback the team switched on ("Show on website" in the panel) through public_feedbacks().
+-- Safe to run more than once.
+create table if not exists public.feedbacks (
+  id          text primary key,
+  data        jsonb not null,
+  created_at  timestamptz not null default now()
+);
+
+alter table public.feedbacks enable row level security;
+
+drop policy if exists "customers send feedback" on public.feedbacks;
+create policy "customers send feedback" on public.feedbacks
+  for insert to anon, authenticated
+  with check (coalesce(data->>'featured', 'false') = 'false');
+
+drop policy if exists "team reads feedback" on public.feedbacks;
+create policy "team reads feedback" on public.feedbacks
+  for select to authenticated using (true);
+
+drop policy if exists "team updates feedback" on public.feedbacks;
+create policy "team updates feedback" on public.feedbacks
+  for update to authenticated using (true) with check (true);
+
+drop policy if exists "team deletes feedback" on public.feedbacks;
+create policy "team deletes feedback" on public.feedbacks
+  for delete to authenticated using (true);
+
+create or replace function public.public_feedbacks()
+returns jsonb
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce(jsonb_agg(t.x), '[]'::jsonb)
+  from (
+    select jsonb_build_object(
+             'id', id,
+             'name', data->>'name',
+             'message', data->>'message',
+             'rating', data->'rating') as x
+      from public.feedbacks
+     where data->>'featured' = 'true'
+     order by coalesce(data->>'featuredAt', data->>'placedAt') desc
+     limit 12
+  ) t;
+$$;
+
+revoke all on function public.public_feedbacks() from public;
+grant execute on function public.public_feedbacks() to anon, authenticated;

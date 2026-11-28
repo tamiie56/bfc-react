@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { DELIVERY_CHARGE, MENU, dishImage } from "../data/menu";
 import type { Dish, MenuCategory } from "../data/menu";
 import type { OrderType } from "../cart/order";
@@ -64,6 +64,28 @@ export interface AdminBooking {
   cancelledBy?: "customer" | "team";
 }
 
+export interface AdminFeedback {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  rating: number; // 1-5
+  /** the team switched it on for the website Reviews slider */
+  featured: boolean;
+  featuredAt?: string;
+  placedAt: string;
+  updatedAt: string;
+}
+
+/** What the public website is allowed to see of a feedback (no email / phone). */
+export interface PublicReview {
+  id: string;
+  name: string;
+  message: string;
+  rating: number;
+}
+
 export interface ItemOverride {
   /** rename an original menu item */
   name?: string;
@@ -105,6 +127,7 @@ const KEYS = {
   bookings: "bfc-admin-bookings-v1",
   menu: "bfc-admin-menu-v1",
   settings: "bfc-admin-settings-v1",
+  feedback: "bfc-admin-feedback-v1",
 } as const;
 
 /* ---------- error channel (the layout shows these as toasts) ---------- */
@@ -438,6 +461,9 @@ const ordersStore: Collection<AdminOrder[]> = isRemote
 const bookingsStore: Collection<AdminBooking[]> = isRemote
   ? remoteTable<AdminBooking>("bookings")
   : collection<AdminBooking[]>(KEYS.bookings, [], isArray as (v: unknown) => v is AdminBooking[]);
+const feedbackStore: Collection<AdminFeedback[]> = isRemote
+  ? remoteTable<AdminFeedback>("feedbacks")
+  : collection<AdminFeedback[]>(KEYS.feedback, [], isArray as (v: unknown) => v is AdminFeedback[]);
 const menuStore: Collection<MenuState> = isRemote
   ? remoteKv<MenuState>("menu", EMPTY_MENU, validMenu)
   : collection<MenuState>(KEYS.menu, EMPTY_MENU, validMenu);
@@ -456,6 +482,7 @@ export function useOrdersReady(): boolean {
 
 export const useOrders = () => hook(ordersStore);
 export const useBookings = () => hook(bookingsStore);
+export const useFeedbacks = () => hook(feedbackStore);
 export const useMenuState = () => hook(menuStore);
 export const useSettings = () => hook(settingsStore);
 
@@ -580,6 +607,82 @@ export async function findMyOrders(phone: string): Promise<MyOrder[] | null> {
     .map((b) => ({ id: b.id, kind: "booking", status: b.status, area: b.area, lines: b.lines, subtotal: b.subtotal, placedAt: b.placedAt, date: b.date, time: b.time, guests: b.guests, cancelledBy: b.cancelledBy }));
   return [...orders, ...bookings].sort((a, b) => b.placedAt.localeCompare(a.placedAt));
 }
+
+/* ---------- feedback ---------- */
+
+/** Saves a feedback from the website form. With Supabase this throws when it could not be saved. */
+export function recordFeedback(f: Pick<AdminFeedback, "name" | "email" | "phone" | "message" | "rating">): Promise<void> {
+  const at = nowIso();
+  const id = "FB-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+  const item: AdminFeedback = { ...f, id, featured: false, placedAt: at, updatedAt: at };
+  return feedbackStore.set([item, ...feedbackStore.get()], true);
+}
+
+export function setFeedbackFeatured(id: string, featured: boolean): void {
+  const at = nowIso();
+  void feedbackStore.set(
+    feedbackStore.get().map((f) => (f.id === id ? { ...f, featured, featuredAt: featured ? at : undefined, updatedAt: at } : f))
+  );
+}
+
+export function deleteFeedback(id: string): void {
+  void feedbackStore.set(feedbackStore.get().filter((f) => f.id !== id));
+}
+
+const REVIEWS_CACHE = "bfc-public-reviews-v1";
+
+const validReviews = (v: unknown): v is PublicReview[] =>
+  Array.isArray(v) && v.every((r) => isObject(r) && typeof r.id === "string" && typeof r.message === "string");
+
+function useRemoteReviews(): PublicReview[] | null {
+  const [list, setList] = useState<PublicReview[] | null>(() => {
+    try {
+      const raw = localStorage.getItem(REVIEWS_CACHE);
+      const parsed: unknown = raw ? JSON.parse(raw) : null;
+      return validReviews(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    let alive = true;
+    sb<unknown>("rpc/public_feedbacks", { method: "POST", body: {} })
+      .then((rows) => {
+        if (!alive || !validReviews(rows)) return;
+        setList(rows);
+        try {
+          localStorage.setItem(REVIEWS_CACHE, JSON.stringify(rows));
+        } catch {
+          /* ignore */
+        }
+      })
+      .catch(() => {
+        /* offline - keep what we have */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return list;
+}
+
+function useLocalReviews(): PublicReview[] | null {
+  const all = hook(feedbackStore);
+  return useMemo(
+    () =>
+      all
+        .filter((f) => f.featured)
+        .sort((a, b) => (b.featuredAt ?? b.placedAt).localeCompare(a.featuredAt ?? a.placedAt))
+        .slice(0, 12)
+        .map((f) => ({ id: f.id, name: f.name, message: f.message, rating: f.rating })),
+    [all]
+  );
+}
+
+/** The feedback the team picked for the website slider (null = still loading). */
+export const usePublicReviews = isRemote ? useRemoteReviews : useLocalReviews;
 
 /* ---------- settings ---------- */
 
