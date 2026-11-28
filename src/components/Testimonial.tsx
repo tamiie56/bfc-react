@@ -38,7 +38,7 @@ export default function Testimonial() {
     if (index >= count) setIndex(0);
   }, [index, count]);
 
-  // auto-play (off for people who asked for less motion, and while hovering / touching)
+  // auto-play keeps going on hover (off for people who asked for less motion, and while a finger is down)
   useEffect(() => {
     if (count < 2 || paused) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -86,10 +86,6 @@ export default function Testimonial() {
           aria-label="What our customers say"
           tabIndex={0}
           onKeyDown={onKeyDown}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocus={() => setPaused(true)}
-          onBlur={() => setPaused(false)}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
