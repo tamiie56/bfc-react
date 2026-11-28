@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { FaCheckCircle, FaPaperPlane, FaRegStar, FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { isRemote } from "../admin/supabase";
-import { recordFeedback } from "../admin/store";
+import { newFeedbackId, recordFeedback } from "../admin/store";
 import heroImg from "../assets/images/hero.jpg";
 
 /** Google Apps Script web app that writes every feedback into the Google Sheet (see google-apps-script/feedback.gs) */
@@ -63,6 +63,7 @@ export default function FeedbackPage() {
 
     setStatus("sending");
     const clean = {
+      id: newFeedbackId(),
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
@@ -171,7 +172,7 @@ export default function FeedbackPage() {
 
                 <div className="field">
                   <span id="rate-label">Your rating</span>
-                  <div className="rate" role="radiogroup" aria-labelledby="rate-label">
+                  <div className="rate" data-level={form.rating === 1 ? "low" : form.rating > 1 ? "good" : "none"} role="radiogroup" aria-labelledby="rate-label">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <button
                         key={n}

@@ -4507,3 +4507,17 @@ button {
 .rate button.is-on {
   color: var(--yellow);
 }
+
+/* star colours: 1 star red, 2-5 stars green */
+.stars--good {
+  color: #3fcf6d;
+}
+.stars--low {
+  color: #ff4338;
+}
+.rate[data-level="good"] button.is-on {
+  color: #3fcf6d;
+}
+.rate[data-level="low"] button.is-on {
+  color: #ff4338;
+}

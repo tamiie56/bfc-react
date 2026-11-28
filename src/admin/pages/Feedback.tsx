@@ -103,8 +103,8 @@ export default function Feedback() {
         Switch on <b>Show on website</b> for the feedback you want in the Reviews slider on the home page. The slider shows up to {SLIDER_MAX}, newest
         choice first. The customer's phone and email are never shown on the website.
         <br />
-        Old feedback in your Google Sheet: open the sheet, <b>File &rarr; Download &rarr; Comma Separated Values (.csv)</b>, then press{" "}
-        <b>Import from Google Sheet</b> and pick that file. Importing the same file again will not create duplicates.
+        Feedback added to your Google Sheet appears here by itself within a minute (set up once with <code>google-apps-script/feedback.gs</code>).
+        As a one-time alternative you can download the sheet as CSV and use <b>Import from Google Sheet</b>.
       </p>
 
       <div className="adm-toolbar">

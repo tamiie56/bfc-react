@@ -77,7 +77,7 @@ export default function Testimonial() {
               {slides.map((r, i) => (
                 <figure key={r.id} className={`reviews__slide ${i === index ? "is-active" : ""}`} aria-hidden={i !== index} aria-label={`${i + 1} of ${count}`}>
                   {r.rating > 0 && (
-                    <ul className="stars" aria-label={`${r.rating} out of 5 stars`}>
+                    <ul className={`stars ${r.rating === 1 ? "stars--low" : "stars--good"}`} aria-label={`${r.rating} out of 5 stars`}>
                       {Array.from({ length: 5 }).map((_, s) => (
                         <li key={s}>{s < r.rating ? <FaStar /> : <FaRegStar />}</li>
                       ))}

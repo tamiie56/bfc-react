@@ -611,10 +611,11 @@ export async function findMyOrders(phone: string): Promise<MyOrder[] | null> {
 /* ---------- feedback ---------- */
 
 /** Saves a feedback from the website form. With Supabase this throws when it could not be saved. */
-export function recordFeedback(f: Pick<AdminFeedback, "name" | "email" | "phone" | "message" | "rating">): Promise<void> {
+export const newFeedbackId = (): string => "FB-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+
+export function recordFeedback(f: Pick<AdminFeedback, "id" | "name" | "email" | "phone" | "message" | "rating">): Promise<void> {
   const at = nowIso();
-  const id = "FB-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
-  const item: AdminFeedback = { ...f, id, featured: false, placedAt: at, updatedAt: at };
+  const item: AdminFeedback = { ...f, featured: false, placedAt: at, updatedAt: at };
   return feedbackStore.set([item, ...feedbackStore.get()], true);
 }
 
