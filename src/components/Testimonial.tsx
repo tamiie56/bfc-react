@@ -11,21 +11,22 @@ import { useParallax } from "../hooks/useParallax";
 const FALLBACK: PublicReview = { id: "default", name: REVIEW.name, message: REVIEW.text, rating: Math.round(REVIEW.rating) };
 
 const CELLS = 8; // 4 x 2 grid on desktop
-const TICK = 2000; // a new cube turns this often
-const FLIP_MS = 900; // must match the transition in .fg__cube.is-flip
+const TICK = 2400; // a new cube turns this often
+const FLIP_MS = 1300; // must match the transition in .fg__cube.is-flip
 /** which cube turns next: criss-cross, so neighbours do not turn one after the other */
 const ORDER = [0, 5, 2, 7, 1, 4, 3, 6];
 
 interface Cell {
   cur: number; // index of the feedback showing now
   next: number | null; // index of the feedback turning in from below
+  flip: boolean; // true once the next face is painted and the turn can start
 }
 
 function initCells(n: number): Cell[] {
   const total = n === 1 ? 1 : CELLS;
   let shift = n >= CELLS ? 0 : Math.max(1, Math.floor(n / 2));
   if (shift > 0 && (4 + shift) % n === 0) shift += 1; // the second row must not repeat the first one
-  return Array.from({ length: total }, (_, i) => ({ cur: (i + (i >= 4 ? shift : 0)) % n, next: null }));
+  return Array.from({ length: total }, (_, i) => ({ cur: (i + (i >= 4 ? shift : 0)) % n, next: null, flip: false }));
 }
 
 /** the feedback shown the least right now (never the one already in this cube) */
@@ -85,6 +86,7 @@ export default function Testimonial() {
   useEffect(() => {
     if (n < 2) return;
     const timers = new Set<number>();
+    const rafs = new Set<number | (() => void)>();
     let step = 0;
     const tick = setInterval(() => {
       if (document.hidden) return;
@@ -94,16 +96,28 @@ export default function Testimonial() {
       if (cs[at].next !== null) return;
       const next = pickNext(cs, at, n);
       if (next === null) return;
-      setCells((prev) => prev.map((c, i) => (i === at ? { ...c, next } : c)));
+      // 1) mount the incoming face first, so it is already painted when the turn starts
+      setCells((prev) => prev.map((c, i) => (i === at ? { ...c, next, flip: false } : c)));
+      // 2) two frames later start the turn (the transition never begins on a cold layer)
+      let raf2 = 0;
+      const raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          setCells((prev) => prev.map((c, i) => (i === at && c.next !== null ? { ...c, flip: true } : c)));
+        });
+      });
+      // 3) when the turn is over the new feedback becomes the front face
       const t = window.setTimeout(() => {
         timers.delete(t);
-        setCells((prev) => prev.map((c, i) => (i === at && c.next !== null ? { cur: c.next, next: null } : c)));
-      }, FLIP_MS + 60);
+        setCells((prev) => prev.map((c, i) => (i === at && c.next !== null ? { cur: c.next, next: null, flip: false } : c)));
+      }, FLIP_MS + 120);
       timers.add(t);
+      rafs.add(raf1);
+      rafs.add(() => cancelAnimationFrame(raf2));
     }, TICK);
     return () => {
       clearInterval(tick);
       timers.forEach((t) => clearTimeout(t));
+      rafs.forEach((r) => (typeof r === "function" ? r() : cancelAnimationFrame(r)));
     };
   }, [key, n]);
 
@@ -117,7 +131,7 @@ export default function Testimonial() {
         <div className={`fg reveal ${cells.length === 1 ? "fg--single" : ""}`} role="list" aria-label="What our customers say">
           {cells.map((c, i) => (
             <figure className="fg__cell" role="listitem" key={i}>
-              <div className={`fg__cube ${c.next !== null ? "is-flip" : ""}`}>
+              <div className={`fg__cube ${c.flip ? "is-flip" : ""}`}>
                 <div className="fg__face fg__face--front">
                   <Face r={slides[c.cur % n]} />
                 </div>
