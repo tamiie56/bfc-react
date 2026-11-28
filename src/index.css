@@ -4334,29 +4334,30 @@ button {
 .fg {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
-  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
 }
 .fg--single {
-  grid-template-columns: minmax(0, 420px);
+  grid-template-columns: minmax(0, 520px);
   justify-content: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .fg__cell {
-  --h: 240px;
+  --h: 300px;
   position: relative;
   height: var(--h);
   margin: 0;
   overflow: hidden;
-  perspective: 1000px;
-  border-right: 1px solid rgba(255, 255, 255, 0.18);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(20, 12, 9, 0.74);
+  perspective: 1200px;
+  border-right: 1px solid rgba(21, 14, 12, 0.14);
+  border-bottom: 1px solid rgba(21, 14, 12, 0.14);
+  background: var(--cream);
+  color: var(--ink);
   transition: background 0.3s;
 }
 .fg__cell:hover {
-  background: rgba(38, 26, 21, 0.9);
+  background: #ffefcf;
 }
 
 .fg__cube {
@@ -4378,9 +4379,10 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1.2rem 1.5rem;
+  gap: 1rem;
+  padding: 1.6rem 2rem;
   text-align: center;
+  background: inherit;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -4393,18 +4395,23 @@ button {
 
 .fg__stars {
   display: flex;
-  gap: 0.2rem;
-  font-size: 0.95rem;
-  color: var(--yellow);
+  gap: 0.25rem;
+  font-size: 1.15rem;
+}
+.fg .stars--good {
+  color: #1fa24a;
+}
+.fg .stars--low {
+  color: #e03126;
 }
 .fg__text {
   max-width: 100%;
   margin: 0;
   font-family: var(--font-head);
-  font-size: 1.15rem;
-  font-weight: 400;
-  line-height: 1.38;
-  color: #f6ebdf;
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ink);
   overflow: hidden;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -4413,22 +4420,22 @@ button {
 }
 .fg__name {
   max-width: 100%;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  letter-spacing: 2.5px;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--yellow);
+  color: var(--red);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .fg__cta {
-  margin-top: 2rem;
+  margin-top: 2.2rem;
   text-align: center;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
   .fg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4438,7 +4445,13 @@ button {
     grid-template-columns: minmax(0, 1fr);
   }
   .fg__cell {
-    --h: 220px;
+    --h: 250px;
+  }
+  .fg__face {
+    padding: 1.3rem 1.4rem;
+  }
+  .fg__text {
+    font-size: 1.35rem;
   }
   .fg__cell:nth-child(n + 5) {
     display: none;

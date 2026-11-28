@@ -113,7 +113,7 @@ export default function Testimonial() {
         <img src={reviewImg} alt="" loading="lazy" />
       </div>
 
-      <div className="container testimonials__inner">
+      <div className="container-wide testimonials__inner">
         <div className={`fg reveal ${cells.length === 1 ? "fg--single" : ""}`} role="list" aria-label="What our customers say">
           {cells.map((c, i) => (
             <figure className="fg__cell" role="listitem" key={i}>
